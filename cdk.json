@@ -1,1 +1,1 @@
-{ "app": "node index" }
+{ "app": "node index.mjs" }

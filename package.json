@@ -2,7 +2,7 @@
   "name": "yt-watch-party",
   "version": "1.0.0",
   "description": "YouTube Watch Party",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,6 +13,8 @@
   "author": "Team 9",
   "license": "UNLICENSED",
   "dependencies": {
-    "aws-cdk-lib": "^2.72.0"
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.72.0-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.72.0-alpha.0",
+    "aws-cdk-lib": "2.72.0"
   }
 }
