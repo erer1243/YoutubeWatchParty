@@ -1,1 +1,4 @@
-{ "app": "node index.mjs" }
+{
+  "app": "node index.mjs",
+  "build": "lambda/build.sh"
+}
