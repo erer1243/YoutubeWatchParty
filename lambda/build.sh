@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-echo "Packing lambda.zip"
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
-npm install --no-save
-zip -r -FS ../lambda.zip *
+ZIP="../lambda.zip"
+[ $ZIP -nt index.mjs ] && [ $ZIP -nt package.json ] && exit
+npm install
+zip -r -FS $ZIP *
