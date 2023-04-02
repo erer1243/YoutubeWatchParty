@@ -23,13 +23,15 @@ const lambdaElasticache =
 const evHandlerLambda = lambdaElasticache.lambdaFunction;
 
 // WebSocket API
-const apiProps = () => ({ integration: new WebSocketLambdaIntegration("event_handler", evHandlerLambda) });
+const apiProps = () => ({
+  integration: new WebSocketLambdaIntegration("event_handler", evHandlerLambda),
+  returnResponse: true,
+});
 const webSocketApi = new WebSocketApi(stack, "YTWP-api", {
   connectRouteOptions: apiProps(),
   disconnectRouteOptions: apiProps(),
   defaultRouteOptions: apiProps(),
 });
-webSocketApi.grantManageConnections(evHandlerLambda);
 new WebSocketStage(stack, "YTWP-api_stages", {
   webSocketApi,
   stageName: 'YTWP-main_stage',
