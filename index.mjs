@@ -5,37 +5,55 @@ import dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
+const STACK_NAME = "YoutubeWatchParty";
+const LAMBDA_NAME = "YTWP-event-handler-lambda";
+const CONNECTIONS_TABLE_NAME = "YTWP-connections-table";
+const PARTIES_TABLE_NAME = "YTWP-parties-table";
+const API_NAME = "YTWP-api";
+const API_STAGES_NAME = "YTWP-api-stages";
+
 // The CloudFormation stack
-const stack = new Stack(new App(), "YouTubeWatchParty");
+const stack = new Stack(new App(), STACK_NAME);
+
 
 // Lambda
-const eventHandlerLambda = new lambda.Function(stack, "YTWP-event-handler-lambda", {
+const eventHandlerLambda = new lambda.Function(stack, LAMBDA_NAME, {
   runtime: lambda.Runtime.NODEJS_18_X,
   handler: "index.handler",
   code: lambda.Code.fromAsset("lambda.zip"),
 });
 
+// Pass tables names to lambda as env vars
+eventHandlerLambda.addEnvironment("PARTIES_TABLE", PARTIES_TABLE_NAME);
+eventHandlerLambda.addEnvironment("CONNECTIONS_TABLE", CONNECTIONS_TABLE_NAME);
+
+
 // DynamoDB
-const membershipTable = new dynamodb.Table(stack, "YTWP-party-membership-table", {
-  partitionKey: { name: "party", type: dynamodb.AttributeType.STRING }
+const connectionsTable = new dynamodb.Table(stack, CONNECTIONS_TABLE_NAME, {
+  partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING }
 });
-membershipTable.addGlobalSecondaryIndex({
-  // Maybe this can be binary, since cids are passed as base64?
-  partitionKey: { name: "connectionId", type: dynamodb.AttributeType.STRING },
-  indexName: "connectionId"
-});
-membershipTable.grantReadWriteData(eventHandlerLambda);
+connectionsTable.grantReadWriteData(eventHandlerLambda);
+
+const partiesTable = new dynamodb.Table(stack, PARTIES_TABLE_NAME, {
+  partitionKey: { name: "Party", type: dynamodb.AttributeType.STRING }
+})
+partiesTable.grantReadWriteData(eventHandlerLambda);
+
 
 // WebSocket API
 const apiProps = () => ({ integration: new WebSocketLambdaIntegration("event_handler", eventHandlerLambda) });
-const webSocketApi = new WebSocketApi(stack, "YTWP-api", {
+const webSocketApi = new WebSocketApi(stack, API_NAME, {
   connectRouteOptions: apiProps(),
   disconnectRouteOptions: apiProps(),
   defaultRouteOptions: apiProps(),
 });
 webSocketApi.grantManageConnections(eventHandlerLambda);
-new WebSocketStage(stack, "YTWP-api-stages", {
+
+const webSocketStage = new WebSocketStage(stack, API_STAGES_NAME, {
   webSocketApi,
-  stageName: 'YTWP-main_stage',
+  stageName: "main",
   autoDeploy: true,
 });
+
+// Pass management url to lambda in an env var
+eventHandlerLambda.addEnvironment("API_MGMT_URL", webSocketStage.callbackUrl);
