@@ -4,17 +4,17 @@ import lambda from "aws-cdk-lib/aws-lambda";
 import dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
 
 const STACK_NAME = "YoutubeWatchParty";
-const LAMBDA_NAME = "YTWP-event-handler-lambda";
-const CONNECTIONS_TABLE_NAME = "YTWP-connections-table";
-const PARTIES_TABLE_NAME = "YTWP-parties-table";
 const API_NAME = "YTWP-api";
 const API_STAGES_NAME = "YTWP-api-stages";
+const PARTIES_TABLE_NAME = "YTWP-parties";
+const CONNECTIONS_TABLE_NAME = "YTWP-connections";
+const LAMBDA_NAME = "YTWP-lambda";
 
 // The CloudFormation stack
 const stack = new Stack(new App(), STACK_NAME);
-
 
 // Lambda
 const eventHandlerLambda = new lambda.Function(stack, LAMBDA_NAME, {
@@ -23,23 +23,33 @@ const eventHandlerLambda = new lambda.Function(stack, LAMBDA_NAME, {
   code: lambda.Code.fromAsset("lambda.zip"),
 });
 
+// DynamoDB Tables
+const partiesTableProps = {
+  tableName: PARTIES_TABLE_NAME,
+  partitionKey: { name: "Party", type: dynamodb.AttributeType.STRING },
+  removalPolicy: RemovalPolicy.DESTROY,
+};
+const connectionsTableProps = {
+  tableName: CONNECTIONS_TABLE_NAME,
+  partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING },
+  removalPolicy: RemovalPolicy.DESTROY,
+};
+
+const partiesTable = new LambdaToDynamoDB(stack, PARTIES_TABLE_NAME, {
+  dynamoTableProps: partiesTableProps,
+  existingLambdaObj: eventHandlerLambda,
+  tablePermissions: "ReadWrite"
+});
+const connectionsTable = new LambdaToDynamoDB(stack, CONNECTIONS_TABLE_NAME, {
+  dynamoTableProps: connectionsTableProps,
+  existingLambdaObj: eventHandlerLambda,
+  existingVpc: partiesTable.vpc,
+  tablePermissions: "ReadWrite"
+})
+
 // Pass tables names to lambda as env vars
 eventHandlerLambda.addEnvironment("PARTIES_TABLE", PARTIES_TABLE_NAME);
 eventHandlerLambda.addEnvironment("CONNECTIONS_TABLE", CONNECTIONS_TABLE_NAME);
-
-
-// DynamoDB
-const connectionsTable = new dynamodb.Table(stack, CONNECTIONS_TABLE_NAME, {
-  partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING },
-  removalPolicy: RemovalPolicy.DESTROY,
-});
-connectionsTable.grantReadWriteData(eventHandlerLambda);
-
-const partiesTable = new dynamodb.Table(stack, PARTIES_TABLE_NAME, {
-  partitionKey: { name: "Party", type: dynamodb.AttributeType.STRING },
-  removalPolicy: RemovalPolicy.DESTROY,
-})
-partiesTable.grantReadWriteData(eventHandlerLambda);
 
 
 // WebSocket API
