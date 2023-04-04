@@ -55,8 +55,8 @@ const onMessage = async (cid, body) => {
     await createParty(cid).then(pid => send(cid, pid));
   } else if (body.includes("get")) {
     const pid = body.split(" ")[1].trim();
-    await getParty(pid).then(itm => send(cid, itm));
-    await getConnectionParty(cid).then(itm => send(cid, itm));
+    await getParty(pid).then(itm => send(cid, itm["Item"] ?? "no entry"));
+    await getConnectionParty(cid).then(itm => send(cid, itm["Item"] ?? "no entry"));
   } else {
     await send(cid, "default response");
   }
