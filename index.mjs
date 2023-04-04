@@ -26,12 +26,12 @@ const eventHandlerLambda = new lambda.Function(stack, LAMBDA_NAME, {
 // DynamoDB Tables
 const partiesTableProps = {
   tableName: PARTIES_TABLE_NAME,
-  partitionKey: { name: "Party", type: dynamodb.AttributeType.STRING },
+  partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
   removalPolicy: RemovalPolicy.DESTROY,
 };
 const connectionsTableProps = {
   tableName: CONNECTIONS_TABLE_NAME,
-  partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING },
+  partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
   removalPolicy: RemovalPolicy.DESTROY,
 };
 

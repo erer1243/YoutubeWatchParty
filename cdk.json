@@ -1,4 +1,5 @@
 {
   "app": "node index.mjs",
-  "build": "lambda/build.sh"
+  "build": "lambda/build.sh",
+  "watch": "."
 }

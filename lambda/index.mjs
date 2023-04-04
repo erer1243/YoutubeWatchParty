@@ -8,42 +8,49 @@ let db = { /* populated in proceeding block */ };
   const partiesTable = process.env["PARTIES_TABLE"];
   const connectionsTable = process.env["CONNECTIONS_TABLE"];
 
-  const basicInputs = (table, keyName, key) => ({
-    TableName: table,
-    Key: { [keyName]: { S: key } },
+  const assertSend = (...args) => dbClient.send(...args).then(resp => {
+    if (resp["$metadata"].httpStatusCode != 200)
+      return Promise.reject(`Failed db access: ${resp}`);
+    return resp;
   });
-
-  const getItem = (table, keyName, key) => dbClient.send(new GetItemCommand({
-    ...basicInputs(table, keyName, key),
+  const basicInputs = (TableName, S) => ({ TableName, Key: { id: { S } } });
+  const getItem = (...args) => assertSend(new GetItemCommand({
+    ...basicInputs(...args),
     ConsistentRead: true,
   }));
-
-  const updateItem = (table, keyName, key, expr, exprAttrs) => dbClient.send(new UpdateItemCommand({
-    ...basicInputs(table, keyName, key),
+  const updateItem = (expr, exprAttrs, ...args) => assertSend(new UpdateItemCommand({
+    ...basicInputs(...args),
     UpdateExpression: expr,
     ExpressionAttributeValues: exprAttrs,
-    ReturnValues: "ALL_NEW", // Makes updateItem return the complete, updated item
+    ReturnValues: "ALL_NEW", // Makes updateItem return the updated attributes
+  }));
+  const deleteItem = (...args) => assertSend(new DeleteItemCommand({
+    ...basicInputs(...args),
+    ReturnValues: "ALL_OLD", // Makes deleteItem return the deleted attributes
   }));
 
-  const deleteItem = (table, keyName, key, cond) => dbClient.send(new DeleteItemCommand({
-    ...basicInputs(table, keyName, key),
-    ConditionExpression: cond,
-  }));
-
-  db.getParty = pid => getItem(partiesTable, "Party", pid);
-  db.getConnectionParty = cid => getItem(connectionsTable, "ConnectionId", cid);
-
+  db.getParty = pid => getItem(partiesTable, pid);
+  db.getConnectionParty = cid => getItem(connectionsTable, cid);
   db.joinParty = async (cid, pid) => {
-    await updateItem(partiesTable, "Party", pid, "add Members :m", { ":m": { SS: [cid] } });
-    await updateItem(connectionsTable, "ConnectionId", cid, "set Party = :p", { ":p": { S: pid } });
+    await updateItem("add members :m", { ":m": { SS: [cid] } }, partiesTable, pid);
+    await updateItem("set pid = :p", { ":p": { S: pid } }, connectionsTable, cid);
   }
-  db.leaveParty = async (cid, pid) => {
+  db.leaveCurrentParty = async cid => {
+    // Remove the user from the connections table
+    const dResp = (await deleteItem(connectionsTable, cid));
 
+    // Remove the user from their party's member list
+    const pid = dResp.Attributes.pid.S;
+    const uResp = await updateItem("delete members :m", { ":m": { SS: [cid] } }, partiesTable, pid);
+
+    // If the party is empty, we can delete it
+    const partyMembers = uResp.Attributes?.members?.SS;
+    if (partyMembers === undefined || Array.isArray(partyMembers) && partyMembers.length() == 0)
+      await deleteItem(partiesTable, pid);
   }
-  db.deletePartyIfEmpty = pid => deleteItem(partiesTable, "Party", )
 }
 
-// Helpers for sending messages to client connections
+// Helper for sending messages to client connections
 const api = new ApiGatewayManagementApiClient({ endpoint: process.env["API_MGMT_URL"] })
 const send = (ConnectionId, Data) => {
   if (typeof (Data) !== "string") Data = JSON.stringify(Data);
@@ -56,42 +63,28 @@ export const handler = async (event, _context) => {
   console.log("connectionId:", connectionId);
   console.log("body:", body);
   switch (eventType) {
-    case "CONNECT": return await onConnect(connectionId);
+    case "CONNECT": return { statusCode: 200 };
     case "DISCONNECT": return await onDisconnect(connectionId);
     case "MESSAGE": return await onMessage(connectionId, body);
     default: return { statusCode: 400 };
   }
 }
 
-const onConnect = async cid => {
-  return { statusCode: 200 };
-}
-
-const onDisconnect = async cid => {
+const onDisconnect = async _cid => {
   return { statusCode: 200 };
 }
 
 const onMessage = async (cid, body) => {
   if (body.includes("create")) {
-    await createParty(cid).then(pid => send(cid, pid));
+    const pid = String(Math.trunc(Math.random() * 10000));
+    await send(cid, pid);
+    await db.joinParty(cid, pid);
+  } else if (body.includes("leave")) {
+    await db.leaveCurrentParty(cid);
   } else if (body.includes("get")) {
     const pid = body.split(" ")[1].trim();
-    const party = (await db.getParty(pid))["Item"] ?? {};
-    const conn = (await db.getConnectionParty(cid))["Item"] ?? {};
-    await send(cid, { party, conn });
   } else {
     await send(cid, "default response");
   }
   return { statusCode: 200 };
 }
-
-const createParty = async cid => {
-  // Generate a random party id
-  const randomId = String(Math.trunc(Math.random() * 10000));
-  return randomId;
-};
-
-const leaveParty = async cid => {
-
-}
-
