@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { App, Stack } from "aws-cdk-lib";
+import { App, RemovalPolicy, Stack } from "aws-cdk-lib";
 import lambda from "aws-cdk-lib/aws-lambda";
 import dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
@@ -30,12 +30,14 @@ eventHandlerLambda.addEnvironment("CONNECTIONS_TABLE", CONNECTIONS_TABLE_NAME);
 
 // DynamoDB
 const connectionsTable = new dynamodb.Table(stack, CONNECTIONS_TABLE_NAME, {
-  partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING }
+  partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING },
+  removalPolicy: RemovalPolicy.DESTROY,
 });
 connectionsTable.grantReadWriteData(eventHandlerLambda);
 
 const partiesTable = new dynamodb.Table(stack, PARTIES_TABLE_NAME, {
-  partitionKey: { name: "Party", type: dynamodb.AttributeType.STRING }
+  partitionKey: { name: "Party", type: dynamodb.AttributeType.STRING },
+  removalPolicy: RemovalPolicy.DESTROY,
 })
 partiesTable.grantReadWriteData(eventHandlerLambda);
 
