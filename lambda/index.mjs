@@ -1,26 +1,47 @@
-import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { DeleteItemCommand, DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 
 // Helpers for interacting with DynamoDB
-const db = new DynamoDBClient({ region: "us-east-1" });
-const partiesTable = process.env["PARTIES_TABLE"];
-const connectionsTable = process.env["CONNECTIONS_TABLE"];
+let db = { /* populated in proceeding block */ };
+{
+  const dbClient = new DynamoDBClient({ region: "us-east-1" });
+  const partiesTable = process.env["PARTIES_TABLE"];
+  const connectionsTable = process.env["CONNECTIONS_TABLE"];
 
-const getItem = (table, keyName, key) => db.send(new GetItemCommand({
-  TableName: table,
-  ConsistentRead: true,
-  Key: { [keyName]: { S: key } }
-}));
-const getParty = pid => getItem(partiesTable, "Party", pid);
-const getConnectionParty = cid => getItem(connectionsTable, "ConnectionId", cid);
+  const basicInputs = (table, keyName, key) => ({
+    TableName: table,
+    Key: { [keyName]: { S: key } },
+  });
 
-const updateItem = (table, keyName, key, expr, exprAttrs) => db.send(new UpdateItemCommand({
-  TableName: table,
-  Key: { [keyName]: { S: key } },
-  UpdateExpression: expr,
-  ExpressionAttributeValues: exprAttrs,
-  ReturnValues: "NONE",
-}));
+  const getItem = (table, keyName, key) => dbClient.send(new GetItemCommand({
+    ...basicInputs(table, keyName, key),
+    ConsistentRead: true,
+  }));
+
+  const updateItem = (table, keyName, key, expr, exprAttrs) => dbClient.send(new UpdateItemCommand({
+    ...basicInputs(table, keyName, key),
+    UpdateExpression: expr,
+    ExpressionAttributeValues: exprAttrs,
+    ReturnValues: "ALL_NEW", // Makes updateItem return the complete, updated item
+  }));
+
+  const deleteItem = (table, keyName, key, cond) => dbClient.send(new DeleteItemCommand({
+    ...basicInputs(table, keyName, key),
+    ConditionExpression: cond,
+  }));
+
+  db.getParty = pid => getItem(partiesTable, "Party", pid);
+  db.getConnectionParty = cid => getItem(connectionsTable, "ConnectionId", cid);
+
+  db.joinParty = async (cid, pid) => {
+    await updateItem(partiesTable, "Party", pid, "add Members :m", { ":m": { SS: [cid] } });
+    await updateItem(connectionsTable, "ConnectionId", cid, "set Party = :p", { ":p": { S: pid } });
+  }
+  db.leaveParty = async (cid, pid) => {
+
+  }
+  db.deletePartyIfEmpty = pid => deleteItem(partiesTable, "Party", )
+}
 
 // Helpers for sending messages to client connections
 const api = new ApiGatewayManagementApiClient({ endpoint: process.env["API_MGMT_URL"] })
@@ -55,8 +76,9 @@ const onMessage = async (cid, body) => {
     await createParty(cid).then(pid => send(cid, pid));
   } else if (body.includes("get")) {
     const pid = body.split(" ")[1].trim();
-    await getParty(pid).then(itm => send(cid, itm["Item"] ?? "no entry"));
-    await getConnectionParty(cid).then(itm => send(cid, itm["Item"] ?? "no entry"));
+    const party = (await db.getParty(pid))["Item"] ?? {};
+    const conn = (await db.getConnectionParty(cid))["Item"] ?? {};
+    await send(cid, { party, conn });
   } else {
     await send(cid, "default response");
   }
@@ -66,8 +88,10 @@ const onMessage = async (cid, body) => {
 const createParty = async cid => {
   // Generate a random party id
   const randomId = String(Math.trunc(Math.random() * 10000));
-  await updateItem(partiesTable, "Party", randomId, "add Members :m", { ":m": { SS: [cid] } });
-  await updateItem(connectionsTable, "ConnectionId", cid, "set Party = :p", { ":p": { S: randomId } });
   return randomId;
 };
+
+const leaveParty = async cid => {
+
+}
 
