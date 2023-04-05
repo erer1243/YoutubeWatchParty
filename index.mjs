@@ -1,7 +1,6 @@
-#!/usr/bin/env node
-import { App, RemovalPolicy, Stack } from "aws-cdk-lib";
-import lambda from "aws-cdk-lib/aws-lambda";
-import dynamodb from "aws-cdk-lib/aws-dynamodb";
+import { App, Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
+import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
+import { AttributeType } from "aws-cdk-lib/aws-dynamodb";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
@@ -17,21 +16,27 @@ const LAMBDA_NAME = "YTWP-lambda";
 const stack = new Stack(new App(), STACK_NAME);
 
 // Lambda
-const eventHandlerLambda = new lambda.Function(stack, LAMBDA_NAME, {
-  runtime: lambda.Runtime.NODEJS_18_X,
+const eventHandlerLambda = new Function(stack, LAMBDA_NAME, {
+  runtime: Runtime.NODEJS_18_X,
   handler: "index.handler",
-  code: lambda.Code.fromAsset("lambda.zip"),
+  code: Code.fromAsset("lambda.zip"),
+  timeout: Duration.seconds(5),
+  environment: {
+    // Pass tables names to lambda as env vars
+    ["PARTIES_TABLE"]: PARTIES_TABLE_NAME,
+    ["CONNECTIONS_TABLE"]: CONNECTIONS_TABLE_NAME,
+  }
 });
 
 // DynamoDB Tables
 const partiesTableProps = {
   tableName: PARTIES_TABLE_NAME,
-  partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+  partitionKey: { name: "id", type: AttributeType.STRING },
   removalPolicy: RemovalPolicy.DESTROY,
 };
 const connectionsTableProps = {
   tableName: CONNECTIONS_TABLE_NAME,
-  partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
+  partitionKey: { name: "id", type: AttributeType.STRING },
   removalPolicy: RemovalPolicy.DESTROY,
 };
 
@@ -46,11 +51,7 @@ const connectionsTable = new LambdaToDynamoDB(stack, CONNECTIONS_TABLE_NAME, {
   existingVpc: partiesTable.vpc,
   tablePermissions: "ReadWrite"
 })
-
-// Pass tables names to lambda as env vars
-eventHandlerLambda.addEnvironment("PARTIES_TABLE", PARTIES_TABLE_NAME);
-eventHandlerLambda.addEnvironment("CONNECTIONS_TABLE", CONNECTIONS_TABLE_NAME);
-
+void connectionsTable;
 
 // WebSocket API
 const apiProps = () => ({ integration: new WebSocketLambdaIntegration("event_handler", eventHandlerLambda) });
