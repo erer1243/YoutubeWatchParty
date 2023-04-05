@@ -1,6 +1,6 @@
 #!/bin/sh
-API_ENDPOINT=`aws apigatewayv2 get-apis | jq --raw-output '.Items | .[] | select(.Name == "YTWP-api") | .ApiEndpoint'`
-if [ -z "$API_ENDPOINT" ]; then
+API_ENDPOINT=`aws apigatewayv2 get-apis --output text --query "(Items[?Name == 'YTWP-api'].ApiEndpoint)[0]"`
+if [ "$API_ENDPOINT" = "None" ]; then
   echo "Is it deployed?"
   exit 1
 fi
