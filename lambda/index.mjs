@@ -13,7 +13,7 @@ let db = { /* populated in proceeding block */ };
       return Promise.reject(`Failed db access: ${resp}`);
     return resp;
   });
-  const basicInputs = (TableName, S) => ({ TableName, Key: { id: { S } } });
+  const basicInputs = (TableName, S) => ({ TableName, Key: { ["id"]: { S } } });
   const getItem = (...args) => assertSend(new GetItemCommand({
     ...basicInputs(...args),
     ConsistentRead: true,
@@ -44,8 +44,8 @@ let db = { /* populated in proceeding block */ };
     const uResp = await updateItem("delete members :m", { ":m": { SS: [cid] } }, partiesTable, pid);
 
     // If the party is empty, we can delete it
-    const partyMembers = uResp.Attributes?.members?.SS;
-    if (partyMembers === undefined || Array.isArray(partyMembers) && partyMembers.length() == 0)
+    const partyMembers = uResp.Attributes?.members?.SS ?? [];
+    if (partyMembers.length() == 0)
       await deleteItem(partiesTable, pid);
   }
 }
