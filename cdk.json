@@ -1,5 +1,5 @@
 {
   "app": "node index.mjs",
-  "build": "lambda/build.sh",
+  "build": "bash -c '[ ! -d node_modules ] && npm install; lambda/build.sh'",
   "watch": "."
 }
