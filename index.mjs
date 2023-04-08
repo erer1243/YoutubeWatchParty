@@ -84,6 +84,7 @@ eventHandlerLambda.addEnvironment("API_MGMT_URL", webSocketStage.callbackUrl);
 const bucket = new Bucket(stack, BUCKET_NAME, {
   publicReadAccess: true,
   removalPolicy: RemovalPolicy.DESTROY,
+  autoDeleteObjects: true,
 });
 
 const websiteSource = Source.asset("webpages");
