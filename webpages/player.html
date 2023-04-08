@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Party!</title>
+  <link rel="stylesheet" href="player.css">
+</head>
+<body>
+  <h1  class="welc" >YouTube Watch Party</h1>
+  <div class="url-input">
+    <label for="videoUrl">Enter YouTube URL:</label>
+    <input type="text" id="videoUrl">
+    <button id="loadVideo">Load Video</button>
+    <button id="addToQueue">Add to Queue</button>
+  </div>
+    <h4 id = "GCODE"></h4>
+  	<script>
+		const queryString = window.location.search;
+
+		// Use a regular expression to match the 4 digit number after a ?
+		const regex = /\?(\d{4})/;
+		const match = regex.exec(queryString);
+
+		// Extract the 4 digit number from the match
+		const number = match[1];
+
+		// Convert the number to an integer
+		const groupCode = parseInt(number, 10);
+		const text = "Group code: " + groupCode;
+		const gcHead = document.getElementById("GCODE");
+		gcHead.innerHTML = text;
+	</script>
+
+
+  <div class="main-content">
+
+    <div class="video-queue" id="videoQueue">
+	
+      <h2>Video Queue</h2>
+    </div>
+    <div id="player"></div>
+  </div>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="player.js"></script>
+</body>
+</html>
