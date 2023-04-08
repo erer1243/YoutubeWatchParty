@@ -1,16 +1,25 @@
 import { App, Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
 import { Function, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import { AttributeType } from "aws-cdk-lib/aws-dynamodb";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
 
 const STACK_NAME = "YoutubeWatchParty";
+
 const API_NAME = "YTWP-api";
 const API_STAGES_NAME = "YTWP-api-stages";
+
 const PARTIES_TABLE_NAME = "YTWP-parties";
 const CONNECTIONS_TABLE_NAME = "YTWP-connections";
+
 const LAMBDA_NAME = "YTWP-lambda";
+
+const BUCKET_NAME = "YTWP-bucket";
+const BUCKET_DEPLOYMENT_NAME = "YTWP-bucket-deployment";
+const API_URL_OBJECT_KEY = "api-url";
 
 // The CloudFormation stack
 const stack = new Stack(new App(), STACK_NAME);
@@ -70,3 +79,16 @@ const webSocketStage = new WebSocketStage(stack, API_STAGES_NAME, {
 
 // Pass management url to lambda in an env var
 eventHandlerLambda.addEnvironment("API_MGMT_URL", webSocketStage.callbackUrl);
+
+// S3 Bucket
+const bucket = new Bucket(stack, BUCKET_NAME, {
+  publicReadAccess: true,
+  removalPolicy: RemovalPolicy.DESTROY,
+});
+
+const websiteSource = Source.asset("webpages");
+const apiUrlSource = Source.data(API_URL_OBJECT_KEY, webSocketStage.url);
+new BucketDeployment(stack, BUCKET_DEPLOYMENT_NAME, {
+  sources: [websiteSource, apiUrlSource],
+  destinationBucket: bucket
+});
