@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Party</title>
+	    <style>
+			body {
+				margin: 0;
+				overflow: hidden;
+				background-color: #000;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				color: #FFF;
+				font-family: Arial, sans-serif;
+				font-size: 3em;
+			}
+    
+    <!--     body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        } -->
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .button {
+            background-color: #FF0000;
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        .input-container {
+            display: none;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        .input-label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+	<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+				background-color: #000;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				color: #FFF;
+				font-family: Arial, sans-serif;
+				font-size: 2em;
+			}
+			.fix{
+				position:fixed;
+				bottom:50px;
+				left:42%;
+			}
+    </style>
+    <div class="container">
+        <h1>Welcome to YouTube Watch Party</h1>
+        <button class="button" id="startGroupBtn">Start a Group</button>
+        <button class="button" id="joinGroupBtn">Join a Group</button>
+        <div class="input-container" id="inputContainer">
+            <div class="input-group">
+                <label class="input-label" for="groupCode">Enter Group Code:</label>
+                <input type="text" id="groupCode" name="groupCode" maxlength="4" size="4">
+            </div>
+            <button class="button" id="submitCodeBtn">Submit Code</button>
+        </div>
+    </div>
+	    <script>
+        const createFirework = () => {
+            const firework = document.createElement("div");
+            firework.style.position = "absolute";
+            firework.style.width = "5px";
+            firework.style.height = "5px";
+            firework.style.backgroundColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+            firework.style.borderRadius = "50%";
+            firework.style.animation = `firework ${Math.random() * 1 + 0.5}s ease-out`;
+            firework.style.top = `${Math.random() * window.innerHeight}px`;
+            firework.style.left = `${Math.random() * window.innerWidth}px`;
+
+            document.body.appendChild(firework);
+
+            setTimeout(() => {
+                firework.remove();
+            }, 2000);
+        }
+
+        setInterval(createFirework, 100);
+    </script>
+    <style>
+        @keyframes firework {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px) scale(1.5);
+                opacity: 0;
+            }
+        }
+    </style>
+    <script>
+        const startGroupBtn = document.getElementById('startGroupBtn');
+        const joinGroupBtn = document.getElementById('joinGroupBtn');
+        const submitCodeBtn = document.getElementById('submitCodeBtn');
+        const inputContainer = document.getElementById('inputContainer');
+        const groupCodeInput = document.getElementById('groupCode');
+
+        startGroupBtn.addEventListener('click', () => {
+            const groupCode = generateGroupCode();
+            sessionStorage.setItem('groupCode', groupCode);
+            window.location.href =  'player.html?' + groupCode;
+        });
+
+        joinGroupBtn.addEventListener('click', () => {
+            inputContainer.style.display = 'flex';
+        });
+
+        submitCodeBtn.addEventListener('click', () => {
+            const groupCode = groupCodeInput.value;
+            if (groupCode.length === 4) {
+                sessionStorage.setItem('groupCode', groupCode);
+				window.location.href = 'player.html?' + groupCode;
+            } else {
+                alert('Please enter a valid 4-digit code');
+            }
+        });
+
+        function generateGroupCode() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+    </script>
+	<img src="https://d0.awsstatic.com/logos/powered-by-aws.png" alt="Powered by AWS Cloud Computing" class="fix">
+</body>
+
+</html>
