@@ -12,12 +12,12 @@ const STACK_NAME = "YoutubeWatchParty";
 const API_NAME = "YTWP-api";
 const API_STAGES_NAME = "YTWP-api-stages";
 
-const PARTIES_TABLE_NAME = "YTWP-parties";
-const CONNECTIONS_TABLE_NAME = "YTWP-connections";
+const PARTIES_TABLE_NAME = "YTWP-parties-table";
+const CONNECTIONS_TABLE_NAME = "YTWP-connections-table";
 
-const LAMBDA_NAME = "YTWP-lambda";
+const LAMBDA_NAME = "YTWP-event-handler-lambda";
 
-const BUCKET_NAME = "YTWP-bucket";
+const BUCKET_NAME = "YTWP-website-bucket";
 const BUCKET_DEPLOYMENT_NAME = "YTWP-bucket-deployment";
 const API_URL_OBJECT_KEY = "api-url";
 
