@@ -45,6 +45,7 @@ function parseVideoId(url) {
 }
 
 function onPlayerStateChange(event) {
+  console.log(event);
   // Send the appropriate function calls using WebSocket API when pausing or playing
   if (event.data === YT.PlayerState.PLAYING) {
     // Send play event using WebSocket API
