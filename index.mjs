@@ -6,23 +6,23 @@ import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
+import { readFileSync } from 'fs';
 
-const STACK_NAME = "YoutubeWatchParty";
-
-const API_NAME = "YTWP-api";
-const API_STAGES_NAME = "YTWP-api-stages";
-
-const PARTIES_TABLE_NAME = "YTWP-parties-table";
-const CONNECTIONS_TABLE_NAME = "YTWP-connections-table";
-
-const LAMBDA_NAME = "YTWP-event-handler-lambda";
-
-const BUCKET_NAME = "YTWP-website-bucket";
-const BUCKET_DEPLOYMENT_NAME = "YTWP-bucket-deployment";
-const API_URL_OBJECT_KEY = "api-url";
+let {
+  STACK_NAME,
+  API_NAME,
+  API_STAGES_NAME,
+  PARTIES_TABLE_NAME,
+  CONNECTIONS_TABLE_NAME,
+  LAMBDA_NAME,
+  BUCKET_NAME,
+  BUCKET_DEPLOYMENT_NAME,
+  BUCKET_ID,
+  API_URL_OBJECT_KEY,
+} = JSON.parse(readFileSync("names.json"));
 
 // The CloudFormation stack
-const stack = new Stack(new App(), STACK_NAME);
+const stack = new Stack(new App(), STACK_NAME, { description: "Youtube Watch Party - Team 9" });
 
 // Lambda
 const eventHandlerLambda = new Function(stack, LAMBDA_NAME, {
@@ -84,7 +84,10 @@ eventHandlerLambda.addEnvironment("API_MGMT_URL", webSocketStage.callbackUrl);
 const bucket = new Bucket(stack, BUCKET_NAME, {
   publicReadAccess: true,
   removalPolicy: RemovalPolicy.DESTROY,
+  websiteIndexDocument: "index.html",
+  websiteErrorDocument: undefined,
   autoDeleteObjects: true,
+  bucketName: BUCKET_ID,
 });
 
 const websiteSource = Source.asset("webpages");

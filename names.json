@@ -1,0 +1,12 @@
+{
+  "STACK_NAME": "YoutubeWatchParty",
+  "API_NAME": "YTWP-api",
+  "API_STAGES_NAME": "YTWP-api-stages",
+  "PARTIES_TABLE_NAME": "YTWP-parties-table",
+  "CONNECTIONS_TABLE_NAME": "YTWP-connections-table",
+  "LAMBDA_NAME": "YTWP-event-handler-lambda",
+  "BUCKET_NAME": "YTWP-website-bucket",
+  "BUCKET_DEPLOYMENT_NAME": "YTWP-bucket-deployment",
+  "BUCKET_ID": "youtubewatchparty",
+  "API_URL_OBJECT_KEY": "api-url"
+}
