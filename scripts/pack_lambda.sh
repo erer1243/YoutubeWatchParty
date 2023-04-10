@@ -1,5 +1,7 @@
-#!/usr/bin/env bash
-cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+#!/bin/sh
+LAMBDA_DIR=`dirname "$0"`/../lambda
+cd $LAMBDA_DIR
+
 ZIP="../lambda.zip"
 [ $ZIP -nt index.mjs ] && [ $ZIP -nt package.json ] && exit
 [ $ZIP -ot package.json ] && npm install
