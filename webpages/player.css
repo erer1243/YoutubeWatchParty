@@ -22,7 +22,7 @@ body {
   text-align: center;
   background: linear-gradient(270deg, #ff0a54, #cbe7ed, #ff0a54);
   background-size: 600% 600%;
-  animation: gradient 10s ease infinite;
+  animation: gradient 3s ease 1;
   padding: 10px;
 }
 
