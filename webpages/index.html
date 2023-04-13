@@ -130,7 +130,7 @@
 
         startGroupBtn.addEventListener('click', () => {
             const groupCode = generateGroupCode();
-            sessionStorage.setItem('groupCode', groupCode);
+            //sessionStorage.setItem('groupCode', groupCode);
             window.location.href =  'player.html?' + groupCode;
         });
 
@@ -141,7 +141,7 @@
         submitCodeBtn.addEventListener('click', () => {
             const groupCode = groupCodeInput.value;
             if (groupCode.length === 4) {
-                sessionStorage.setItem('groupCode', groupCode);
+                //sessionStorage.setItem('groupCode', groupCode);
 				window.location.href = 'player.html?' + groupCode;
             } else {
                 alert('Please enter a valid 4-digit code');
@@ -149,7 +149,7 @@
         });
 
         function generateGroupCode() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
+            return 0; // Changed 4/12/23
         }
     </script>
 	<img src="https://d0.awsstatic.com/logos/powered-by-aws.png" alt="Powered by AWS Cloud Computing" class="fix">
