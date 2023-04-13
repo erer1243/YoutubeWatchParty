@@ -15,6 +15,7 @@
     <button id="addToQueue">Add to Queue</button>
   </div>
     <h4 id = "GCODE"></h4>
+	<script src="player.js"></script>
   	<script>
 		const queryString = window.location.search;
 		var number = 0;
@@ -28,6 +29,7 @@
 		} catch (e) {
 			number = 0;
 		}
+		ret();
 		// Convert the number to an integer
 		var groupCode = parseInt(number, 10);
 		console.log("Before " + groupCode);
@@ -40,8 +42,10 @@
 				alert('Error: Invalid Group Code!');
 			}
 		}
+		ret();
 		groupCode = sessionStorage.getItem("realCode");
-		console.log("Joined " + groupCode + " ON " + socket);
+
+		console.log("Joined " + groupCode);
 		
 		const text = "Group code: " + groupCode;
 		const gcHead = document.getElementById("GCODE");
@@ -58,6 +62,6 @@
     <div id="player"></div>
   </div>
   <script src="https://www.youtube.com/iframe_api"></script>
-  <script src="player.js"></script>
+
 </body>
 </html>
