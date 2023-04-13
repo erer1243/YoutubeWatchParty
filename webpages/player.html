@@ -17,16 +17,29 @@
     <h4 id = "GCODE"></h4>
   	<script>
 		const queryString = window.location.search;
-
+		var number = 0;
 		// Use a regular expression to match the 4 digit number after a ?
 		const regex = /\?(\d{4})/;
 		const match = regex.exec(queryString);
 
 		// Extract the 4 digit number from the match
-		const number = match[1];
+		number = match[1];
 
 		// Convert the number to an integer
-		const groupCode = parseInt(number, 10);
+		var groupCode = parseInt(number, 10);
+		console.log("Before " + groupCode);
+		function handleGroupCode(groupCode) {
+			if (groupCode === 0) {
+				makeGroup();
+			} if (groupCode.length === 4) {
+				joinGroup(groupCode);
+			} else {
+				alert('Error: Invalid Group Code!');
+			}
+		}
+		groupCode = sessionStore.getItem("realCode");
+		console.log("Joined " + groupCode + " ON " + socket);
+		
 		const text = "Group code: " + groupCode;
 		const gcHead = document.getElementById("GCODE");
 		gcHead.innerHTML = text;
