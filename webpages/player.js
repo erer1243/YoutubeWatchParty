@@ -1,6 +1,6 @@
 let player;
 
-window.onload = localStorage.getItem("groupCode");
+//window.onload = localStorage.getItem("groupCode");
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('player', {
@@ -25,6 +25,45 @@ function loadVideo() {
     alert("Invalid YouTube URL");
   }
 }
+
+r = await fetch("/api-url"); // THIS SHOULD BE PUT IN A FUNCTION SO ITLL WORK ON LOCAL MACHINE
+apiurl = await r.text();
+const webSocketUrl = apiurl;
+const socket = new WebSocket(webSocketUrl);
+
+socket.addEventListener("open", (event) => {
+  console.log("WebSocket connection opened:", event);
+});
+
+socket.addEventListener("message", (event) => {
+  console.log("Received message from server:", event.data);
+  printResponse(event.data);
+  sessionStorage.setItem('realCode', event.data); // already joined
+});
+
+socket.addEventListener("close", (event) => {
+  console.log("WebSocket connection closed:", event);
+});
+
+socket.addEventListener("error", (event) => {
+  console.error("WebSocket error:", event);
+});
+
+function sendMessage(message) {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(message);
+  } else {
+    console.error("WebSocket is not open. ReadyState:", socket.readyState);
+  }
+}
+
+function printResponse(response) {
+  console.log("Server response:", response);
+}
+
+
+
+
 
 function addToQueue() {
   const videoUrl = document.getElementById("videoUrl").value;
@@ -61,4 +100,12 @@ function updateQueue(videoId) {
   const listItem = document.createElement("li");
   listItem.textContent = `Video ID: ${videoId}`;
   videoQueue.appendChild(listItem);
+}
+
+function makeGroup() {
+	sendMessage('create');
+}
+
+function joinGroup(groupCode) {
+	sendMessage('join ' + groupCode);
 }
