@@ -76,7 +76,11 @@ const onDisconnect = async _cid => {
 
 const onMessage = async (cid, body) => {
   if (body.includes("create")) {
-    const pid = String(Math.trunc(Math.random() * 10000));
+    const pid = String(Math.trunc(Math.random() * 9000 + 1000)); // 4/13/23
+    await send(cid, pid);
+    await db.joinParty(cid, pid);
+  } else if (body.includes("join")) { // 4/13/23
+    const pid = body.split(" ")[1].trim();
     await send(cid, pid);
     await db.joinParty(cid, pid);
   } else if (body.includes("leave")) {
