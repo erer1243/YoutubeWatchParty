@@ -26,32 +26,48 @@ function loadVideo() {
   }
 }
 
+let socket;
+
 async function fetchFunc() {
-	r = await fetch("/api-url");
-	apiurl = await r.text();
-	const webSocketUrl = apiurl;
-	const socket = new WebSocket(webSocketUrl);
+	try {
+		r = await fetch("/api-url");
+		apiurl = await r.text();
+		return apiurl;
+  } catch (error) {
+    console.error("Error fetching API URL:", error);
+    return null;
+  }
+}		
+async function setupWebSocket() {
+  const webSocketUrl = await fetchFunc();
+
+  if (!webSocketUrl) {
+    console.error("Failed to fetch WebSocket URL");
+    return;
+  }
+
+  socket = new WebSocket(webSocketUrl);
+
+  socket.addEventListener("open", (event) => {
+    console.log("WebSocket connection opened:", event);
+  });
+
+  socket.addEventListener("message", (event) => {
+    console.log("Received message from server:", event.data);
+    printResponse(event.data);
+    sessionStorage.setItem("realCode", event.data);
+  });
+
+  socket.addEventListener("close", (event) => {
+    console.log("WebSocket connection closed:", event);
+  });
+
+  socket.addEventListener("error", (event) => {
+    console.error("WebSocket error:", event);
+  });
 }
 
-fetchFunc();
-
-socket.addEventListener("open", (event) => {
-  console.log("WebSocket connection opened:", event);
-});
-
-socket.addEventListener("message", (event) => {
-  console.log("Received message from server:", event.data);
-  printResponse(event.data);
-  sessionStorage.setItem('realCode', event.data); // already joined
-});
-
-socket.addEventListener("close", (event) => {
-  console.log("WebSocket connection closed:", event);
-});
-
-socket.addEventListener("error", (event) => {
-  console.error("WebSocket error:", event);
-});
+setupWebSocket();
 
 function sendMessage(message) {
   if (socket.readyState === WebSocket.OPEN) {
@@ -64,9 +80,6 @@ function sendMessage(message) {
 function printResponse(response) {
   console.log("Server response:", response);
 }
-
-
-
 
 
 function addToQueue() {
@@ -112,4 +125,11 @@ function makeGroup() {
 
 function joinGroup(groupCode) {
 	sendMessage('join ' + groupCode);
+}
+
+function ret () {
+	
+	let i = 1;
+	i = i + i;
+	return i;
 }
