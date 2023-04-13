@@ -26,10 +26,14 @@ function loadVideo() {
   }
 }
 
-r = await fetch("/api-url"); // THIS SHOULD BE PUT IN A FUNCTION SO ITLL WORK ON LOCAL MACHINE
-apiurl = await r.text();
-const webSocketUrl = apiurl;
-const socket = new WebSocket(webSocketUrl);
+async function fetchFunc() {
+	r = await fetch("/api-url");
+	apiurl = await r.text();
+	const webSocketUrl = apiurl;
+	const socket = new WebSocket(webSocketUrl);
+}
+
+fetchFunc();
 
 socket.addEventListener("open", (event) => {
   console.log("WebSocket connection opened:", event);
