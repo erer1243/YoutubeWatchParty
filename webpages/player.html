@@ -23,8 +23,11 @@
 		const match = regex.exec(queryString);
 
 		// Extract the 4 digit number from the match
-		number = match[1];
-
+		try {
+			number = match[1];
+		} catch (e) {
+			number = 0;
+		}
 		// Convert the number to an integer
 		var groupCode = parseInt(number, 10);
 		console.log("Before " + groupCode);
@@ -37,7 +40,7 @@
 				alert('Error: Invalid Group Code!');
 			}
 		}
-		groupCode = sessionStore.getItem("realCode");
+		groupCode = sessionStorage.getItem("realCode");
 		console.log("Joined " + groupCode + " ON " + socket);
 		
 		const text = "Group code: " + groupCode;
