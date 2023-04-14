@@ -24,8 +24,8 @@ timestamp:
     out = { timestamp,
             members: [...<client ids as strings>],
             paused: true/false,
-            video: <video id as string>,
-            seek: <video seek time in seconds>
+            video: <video id as string> | null,
+            seek: <video seek time in seconds> | null,
           }
             
 
@@ -65,6 +65,6 @@ timestamp:
     out = { ...in, timestamp, 
             members: [...<client ids as strings>], 
             paused: true/false, 
-            video: <video id as string>,
-            seek: <video seek time in seconds>
+            video: <video id as string> | null,
+            seek: <video seek time in seconds> | null,
           }

@@ -31,10 +31,14 @@ let db = { /* populated in proceeding block */ };
 
   db.getParty = pid => getItem(partiesTable, pid);
   db.getConnectionParty = cid => getItem(connectionsTable, cid);
+
   db.joinParty = async (cid, pid) => {
     await updateItem("add members :m", { ":m": { SS: [cid] } }, partiesTable, pid);
     await updateItem("set pid = :p", { ":p": { S: pid } }, connectionsTable, cid);
   }
+
+  // db.
+
   db.leaveCurrentParty = async cid => {
     // Remove the user from the connections table
     const dResp = (await deleteItem(connectionsTable, cid));
@@ -45,7 +49,7 @@ let db = { /* populated in proceeding block */ };
 
     // If the party is empty, we can delete it
     const partyMembers = uResp.Attributes?.members?.SS ?? [];
-    if (partyMembers.length() == 0)
+    if (partyMembers.length == 0)
       await deleteItem(partiesTable, pid);
   }
 }
@@ -70,25 +74,40 @@ export const handler = async (event, _context) => {
   }
 }
 
-const onDisconnect = async _cid => {
+const onDisconnect = async cid => {
+  await db.leaveCurrentParty(cid);
   return { statusCode: 200 };
 }
 
 const onMessage = async (cid, body) => {
-  if (body.includes("create")) {
-    const pid = String(Math.trunc(Math.random() * 9000 + 1000)); // 4/13/23
-    await send(cid, pid);
-    await db.joinParty(cid, pid);
-  } else if (body.includes("join")) { // 4/13/23
-    const pid = body.split(" ")[1].trim();
-    await send(cid, pid);
-    await db.joinParty(cid, pid);
-  } else if (body.includes("leave")) {
-    await db.leaveCurrentParty(cid);
-  } else if (body.includes("get")) {
-    const pid = body.split(" ")[1].trim();
-  } else {
-    await send(cid, "default response");
-  }
+  await db.joinParty(cid, "my party!");
+  await send(cid, await db.getParty("my party!"));
+  await db.leaveCurrentParty(cid);
+  // interpretation of the body is described in the SCHEMA file
+  // const message = JSON.parse(body);
   return { statusCode: 200 };
 }
+
+const actionHandlers = {
+  join: pid => {
+    assert(typeof pid === 'string');
+    assert(pid.length > 0 && pid.length < 20);
+
+    const timestamp = getTimestamp();
+
+  },
+  paused: paused => {
+
+  },
+  seek: time => {
+
+  },
+  video: vid => {
+
+  },
+  info: () => {
+
+  }
+}
+
+const getTimestamp = () => new Date().getTime();
