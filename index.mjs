@@ -38,6 +38,7 @@ const eventHandlerLambda = new Function(stack, LAMBDA_NAME, {
 });
 
 // DynamoDB Tables
+// Schemas described at the top of lambda/index.mjs
 const partiesTableProps = {
   tableName: PARTIES_TABLE_NAME,
   partitionKey: { name: "id", type: AttributeType.STRING },

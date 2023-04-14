@@ -1,5 +1,25 @@
 import { DeleteItemCommand, DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+import { unmarshall, marshall } from "@aws-sdk/util-dynamodb";
+
+
+/* Database Schema
+   ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+`connections` table:
+  { id: string (primary key) = The `connectionId` (cid) of a websocket connection, as provided by API gateway
+    pid: string = The id of the party that this connection currently belongs to
+  }
+
+`parties` table:
+  { id: string (primary key) = The user-provided identifier of the party
+    members: set<string> = The cids of users in this party
+    paused: boolean = Whether the party's video is paused
+    video: string = The id of the party's youtube video (youtube.com/watch?v=XXXXXXXXXX)
+    seek: number = The seek time into the video (not updated in real time, only the last update)
+    seek_timestamp: number = The time that the latest seek update came in. Given by `new Date().getTime()`.
+                             Used to calculate the current seek time when it is requested.
+  }
+*/
 
 // Helpers for interacting with DynamoDB
 let db = { /* populated in proceeding block */ };
@@ -13,7 +33,7 @@ let db = { /* populated in proceeding block */ };
       return Promise.reject(`Failed db access: ${resp}`);
     return resp;
   });
-  const basicInputs = (TableName, S) => ({ TableName, Key: { ["id"]: { S } } });
+  const basicInputs = (TableName, id) => ({ TableName, Key: marshall({ id }) });
   const getItem = (...args) => assertSend(new GetItemCommand({
     ...basicInputs(...args),
     ConsistentRead: true,
@@ -29,15 +49,19 @@ let db = { /* populated in proceeding block */ };
     ReturnValues: "ALL_OLD", // Makes deleteItem return the deleted attributes
   }));
 
-  db.getParty = pid => getItem(partiesTable, pid);
+  db.getParty = async pid => {
+    const resp = await getItem(partiesTable, pid);
+    const item = unmarshall(resp.Item);
+    
+    return item;
+  }
+
   db.getConnectionParty = cid => getItem(connectionsTable, cid);
 
   db.joinParty = async (cid, pid) => {
-    await updateItem("add members :m", { ":m": { SS: [cid] } }, partiesTable, pid);
-    await updateItem("set pid = :p", { ":p": { S: pid } }, connectionsTable, cid);
+    await updateItem("add members :m", { ":m": marshall(set(cid)) }, partiesTable, pid);
+    await updateItem("set pid = :p", { ":p": marshall(pid) }, connectionsTable, cid);
   }
-
-  // db.
 
   db.leaveCurrentParty = async cid => {
     // Remove the user from the connections table
@@ -45,13 +69,15 @@ let db = { /* populated in proceeding block */ };
 
     // Remove the user from their party's member list
     const pid = dResp.Attributes.pid.S;
-    const uResp = await updateItem("delete members :m", { ":m": { SS: [cid] } }, partiesTable, pid);
+    const uResp = await updateItem("delete members :m", { ":m": marshall(set(cid)) }, partiesTable, pid);
 
     // If the party is empty, we can delete it
     const partyMembers = uResp.Attributes?.members?.SS ?? [];
     if (partyMembers.length == 0)
       await deleteItem(partiesTable, pid);
   }
+
+  const set = (...args) => new Set(args);
 }
 
 // Helper for sending messages to client connections
