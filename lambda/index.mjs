@@ -1,7 +1,17 @@
 import { DeleteItemCommand, DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 import { unmarshall, marshall } from "@aws-sdk/util-dynamodb";
+import assert from 'assert';
 
+// Helper for sending messages to client connections
+const api = new ApiGatewayManagementApiClient({ endpoint: process.env["API_MGMT_URL"] })
+const send = (ConnectionId, Data) => {
+  if (typeof (Data) !== "string") Data = JSON.stringify(Data);
+  return api.send(new PostToConnectionCommand({ Data, ConnectionId }))
+};
+
+// Shorthand for getting timestamp
+const now = () => new Date().getTime();
 
 /* Database Schema
    ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -16,8 +26,9 @@ import { unmarshall, marshall } from "@aws-sdk/util-dynamodb";
     paused: boolean = Whether the party's video is paused
     video: string = The id of the party's youtube video (youtube.com/watch?v=XXXXXXXXXX)
     seek: number = The seek time into the video (not updated in real time, only the last update)
-    seek_timestamp: number = The time that the latest seek update came in. Given by `new Date().getTime()`.
-                             Used to calculate the current seek time when it is requested.
+    seekLastUpdated: number = The time that the latest seek or pause update came in
+                              Always the result of now()
+                              Used to calculate the current seek time when it is requested
   }
 */
 
@@ -49,17 +60,30 @@ let db = { /* populated in proceeding block */ };
     ReturnValues: "ALL_OLD", // Makes deleteItem return the deleted attributes
   }));
 
-  db.getParty = async pid => {
+  db.getPartyInfo = async pid => {
     const resp = await getItem(partiesTable, pid);
     const item = unmarshall(resp.Item);
-    
-    return item;
+
+    const members = Array.from(item.members ?? []);
+    const paused = item.paused ?? true;
+    const video = item.video ?? "jNQXAC9IVRw";
+
+    // Database times are in milliseconds, but client seek time must be sent in whole seconds
+    const seekLastUpdated = item.seekLastUpdated;
+    const prevSeek = item.seek ?? 0;
+    const seek = prevSeek + (seekLastUpdated ? Math.floor((now() - prevSeek) / 1000) : 0);
+
+    return { members, paused, video, seek };
   }
 
-  db.getConnectionParty = cid => getItem(connectionsTable, cid);
+  db.getConnectionParty = async cid => {
+    const resp = await getItem(connectionsTable, cid);
+    const item = unmarshall(resp.Item);
+    return item.pid;
+  }
 
   db.joinParty = async (cid, pid) => {
-    await updateItem("add members :m", { ":m": marshall(set(cid)) }, partiesTable, pid);
+    await updateItem("add members :m", { ":m": marshall(new Set([cid])) }, partiesTable, pid);
     await updateItem("set pid = :p", { ":p": marshall(pid) }, connectionsTable, cid);
   }
 
@@ -68,72 +92,66 @@ let db = { /* populated in proceeding block */ };
     const dResp = (await deleteItem(connectionsTable, cid));
 
     // Remove the user from their party's member list
-    const pid = dResp.Attributes.pid.S;
-    const uResp = await updateItem("delete members :m", { ":m": marshall(set(cid)) }, partiesTable, pid);
+    const dAttrs = unmarshall(dResp.Attributes);
+    if (dAttrs.pid !== undefined) {
+      const uResp = await updateItem("delete members :m", { ":m": marshall(new Set([cid])) }, partiesTable, pid);
 
-    // If the party is empty, we can delete it
-    const partyMembers = uResp.Attributes?.members?.SS ?? [];
-    if (partyMembers.length == 0)
-      await deleteItem(partiesTable, pid);
+      // If the party is empty, we can delete it
+      const uAttrs = unmarshall(uResp.Attributes);
+      const partyMembers = uAttrs?.members ?? [];
+      if (partyMembers.length == 0) {
+        await deleteItem(partiesTable, pid);
+      }
+    }
   }
-
-  const set = (...args) => new Set(args);
 }
-
-// Helper for sending messages to client connections
-const api = new ApiGatewayManagementApiClient({ endpoint: process.env["API_MGMT_URL"] })
-const send = (ConnectionId, Data) => {
-  if (typeof (Data) !== "string") Data = JSON.stringify(Data);
-  return api.send(new PostToConnectionCommand({ Data, ConnectionId }))
-};
 
 export const handler = async (event, _context) => {
-  const { body, requestContext: { connectionId, eventType } } = event;
+  const { body, requestContext: { connectionId: cid, eventType } } = event;
   console.log("eventType:", eventType);
-  console.log("connectionId:", connectionId);
+  console.log("connectionId:", cid);
   console.log("body:", body);
+
+  // "CONNECT" is ignored
   switch (eventType) {
-    case "CONNECT": return { statusCode: 200 };
-    case "DISCONNECT": return await onDisconnect(connectionId);
-    case "MESSAGE": return await onMessage(connectionId, body);
-    default: return { statusCode: 400 };
+    case "MESSAGE": 
+      const msg = JSON.parse(body);
+      assert(msg.action in actionHandlers);
+      const out = await actionHandlers[msg.action](cid, msg);
+      await send(cid, out);
+      break;
+
+    case "DISCONNECT": 
+      await db.leaveCurrentParty(cid);
+      break;
   }
-}
 
-const onDisconnect = async cid => {
-  await db.leaveCurrentParty(cid);
-  return { statusCode: 200 };
-}
-
-const onMessage = async (cid, body) => {
-  await db.joinParty(cid, "my party!");
-  await send(cid, await db.getParty("my party!"));
-  await db.leaveCurrentParty(cid);
-  // interpretation of the body is described in the SCHEMA file
-  // const message = JSON.parse(body);
   return { statusCode: 200 };
 }
 
 const actionHandlers = {
-  join: pid => {
+  join: async (cid, msg) => {
+    const pid = msg.pid;
     assert(typeof pid === 'string');
     assert(pid.length > 0 && pid.length < 20);
 
-    const timestamp = getTimestamp();
+    await db.joinParty(cid, pid);
+    return await db.getPartyInfo(pid);
+  },
+
+  info: async () => {
 
   },
-  paused: paused => {
+
+  paused: async paused => {
 
   },
-  seek: time => {
+
+  seek: async time => {
 
   },
-  video: vid => {
+
+  video: async vid => {
 
   },
-  info: () => {
-
-  }
 }
-
-const getTimestamp = () => new Date().getTime();
