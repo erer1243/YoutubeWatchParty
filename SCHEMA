@@ -21,7 +21,8 @@ timestamp:
 
     'out' is sent to the client, containing party information
 
-    out = { timestamp,
+    out = { action: "info",
+            timestamp,
             members: [...<client ids as strings>],
             paused: true/false,
             video: <video id as string>,
@@ -62,7 +63,8 @@ timestamp:
 
     'out' is sent to the client, containing party information
     
-    out = { ...in, timestamp, 
+    out = { ...in, 
+            timestamp, 
             members: [...<client ids as strings>], 
             paused: true/false, 
             video: <video id as string>,

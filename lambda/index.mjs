@@ -53,11 +53,11 @@ let db = { /* populated in proceeding block */ };
     ...basicInputs(...args),
     UpdateExpression: expr,
     ExpressionAttributeValues: exprAttrs,
-    ReturnValues: "ALL_NEW", // Makes updateItem return the updated attributes
+    ReturnValues: "ALL_NEW", // Returns the updated attributes in .Attributes
   }));
   const deleteItem = (...args) => assertSend(new DeleteItemCommand({
     ...basicInputs(...args),
-    ReturnValues: "ALL_OLD", // Makes deleteItem return the deleted attributes
+    ReturnValues: "ALL_OLD", // Return the deleted attributes in .Attributes
   }));
 
   db.getPartyInfo = async pid => {
@@ -70,8 +70,9 @@ let db = { /* populated in proceeding block */ };
 
     // Database times are in milliseconds, but client seek time must be sent in whole seconds
     const seekLastUpdated = item.seekLastUpdated;
-    const prevSeek = item.seek ?? 0;
-    const seek = prevSeek + (seekLastUpdated ? Math.floor((now() - prevSeek) / 1000) : 0);
+    const dbSeek = item.seek ?? 0;
+    const seekOffset = seekLastUpdated ? Math.floor((now() - dbSeek) / 1000) : 0;
+    const seek = dbSeek + (seekLastUpdated ? Math.floor((now() - dbSeek) / 1000) : 0);
 
     return { members, paused, video, seek };
   }
@@ -104,6 +105,27 @@ let db = { /* populated in proceeding block */ };
       }
     }
   }
+
+  db.setPaused = (pid, paused) => updateItem(
+    "set paused = :p, seekLastUpdated = :t",
+    { ":p": marshall(paused), ":t": marshall(now()) },
+    partiesTable,
+    pid,
+  );
+
+  db.setSeek = (pid, seek) => updateItem(
+    "set seek = :s, seekLastUpdated = :t",
+    { ":s": marshall(seek), ":t": marshall(now()) },
+    partiesTable,
+    pid
+  );
+
+  db.setVideo = (pid, vid) => updateItem(
+    "set video = :v, seek = 0, seekLastUpdated = :t",
+    { ":v": marshall(vid), ":t": marshall(now()) },
+    partiesTable,
+    pid
+  )
 }
 
 export const handler = async (event, _context) => {
@@ -112,16 +134,13 @@ export const handler = async (event, _context) => {
   console.log("connectionId:", cid);
   console.log("body:", body);
 
-  // "CONNECT" is ignored
   switch (eventType) {
-    case "MESSAGE": 
+    case "MESSAGE":
       const msg = JSON.parse(body);
-      assert(msg.action in actionHandlers);
-      const out = await actionHandlers[msg.action](cid, msg);
-      await send(cid, out);
+      await actionHandlers[msg.action](cid, msg);
       break;
 
-    case "DISCONNECT": 
+    case "DISCONNECT":
       await db.leaveCurrentParty(cid);
       break;
   }
@@ -136,22 +155,65 @@ const actionHandlers = {
     assert(pid.length > 0 && pid.length < 20);
 
     await db.joinParty(cid, pid);
-    return await db.getPartyInfo(pid);
+    const info = await db.getPartyInfo(pid);
+
+    const out = { ...info, action: "info", timestamp: now() };
+    await send(cid, out);
   },
 
-  info: async () => {
+  info: async (cid, msg) => {
+    const pid = await db.getConnectionParty(cid);
+    const info = await db.getPartyInfo(pid);
 
+    const out = { ...msg, ...info, timestamp: now() };
+    await send(cid, out);
   },
 
-  paused: async paused => {
+  paused: async (cid, msg) => {
+    const paused = msg.paused;
+    assert(typeof paused === "boolean");
 
+    const pid = await db.getConnectionParty(cid);
+    await db.setPaused(pid, paused);
+
+    const out = { ...msg, timestamp: now() };
+    await sendOtherPartyMembers(cid, pid, out);
   },
 
-  seek: async time => {
+  seek: async (cid, msg) => {
+    const seek = msg.seek;
+    assert(typeof seek === "number");
+    assert(Number.isInteger(seek));
 
+    const pid = await db.getConnectionParty(cid);
+    await db.setSeek(pid, seek);
+
+    const out = { ...msg, timestamp: now() };
+    await sendOtherPartyMembers(cid, pid, out);
   },
 
-  video: async vid => {
+  video: async (cid, msg) => {
+    const vid = msg.vid;
+    assert(typeof vid === "string");
+    assert(vid.match(/^[A-Za-z0-9_-]{11}$/));
 
+    const pid = await db.getConnectionParty(cid);
+    await db.setVideo(pid, vid);
+
+    const out = { ...msg, timestamp: now() };
+    await sendOtherPartyMembers(cid, pid, out);
   },
 }
+
+const sendOtherPartyMembers = async (cid, pid, msg) => {
+  const members = (await db.getPartyInfo(pid)).members;
+  const others = members.filter(m => m !== cid);
+  for (const ocid of others) {
+    try {
+      await send(ocid, msg);
+    } catch (e) {
+      // ignore the error so that clients still receive this message
+      console.error(`\n${ocid}: ${e}`);
+    }
+  }
+} 
