@@ -17,18 +17,19 @@
     <h4 id = "GCODE"></h4>
 	<script src="player.js"></script>
   	<script>
-		const queryString = window.location.search;
-		var number = 0;
+		//const queryString = window.location.search;
+		//var number = 0;
 		// Use a regular expression to match the 4 digit number after a ?
-		const regex = /\?(\d{4})/;
-		const match = regex.exec(queryString);
+		//const regex = /\?(\d{4})/;
+		//const match = regex.exec(queryString);
 
 		// Extract the 4 digit number from the match
-		try {
-			number = match[1];
-		} catch (e) {
-			number = 0;
-		}
+		//try {
+		//	number = match[1];
+		//} catch (e) {
+		//	number = 0;
+		//}
+		/*
 		ret();
 		// Convert the number to an integer
 		var groupCode = parseInt(number, 10);
@@ -42,14 +43,17 @@
 				alert('Error: Invalid Group Code!');
 			}
 		}
-		ret();
-		groupCode = sessionStorage.getItem("realCode");
+		*/
+		//ret();
+		groupCode = sessionStorage.getItem("groupCode");
 
 		console.log("Joined " + groupCode);
 		
 		const text = "Group code: " + groupCode;
 		const gcHead = document.getElementById("GCODE");
 		gcHead.innerHTML = text;
+
+				
 	</script>
 
 
@@ -62,6 +66,11 @@
     <div id="player"></div>
   </div>
   <script src="https://www.youtube.com/iframe_api"></script>
-
+  <button class="button" id="JG">jOIN</button>
+	<script>        
+		JG.addEventListener('click', () => {
+            joinParty(groupCode);
+        });
+	</script>
 </body>
 </html>
