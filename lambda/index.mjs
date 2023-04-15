@@ -67,12 +67,13 @@ let db = { /* populated in proceeding block */ };
     const members = Array.from(item.members ?? []);
     const paused = item.paused ?? true;
     const video = item.video ?? "jNQXAC9IVRw";
+    const seekLastUpdated = item.seekLastUpdated ?? 0;
+    let seek = item.seek ?? 0;
 
-    // Database times are in milliseconds, but client seek time must be sent in whole seconds
-    const seekLastUpdated = item.seekLastUpdated;
-    const dbSeek = item.seek ?? 0;
-    const seekOffset = seekLastUpdated ? Math.floor((now() - dbSeek) / 1000) : 0;
-    const seek = dbSeek + (seekLastUpdated ? Math.floor((now() - dbSeek) / 1000) : 0);
+    if (!paused && seekLastUpdated) {
+      const seekOffset = Math.floor((seekLastUpdated - now()) / 1000);
+      seek += seekOffset;
+    }
 
     return { members, paused, video, seek };
   }
@@ -91,18 +92,17 @@ let db = { /* populated in proceeding block */ };
   db.leaveCurrentParty = async cid => {
     // Remove the user from the connections table
     const dResp = (await deleteItem(connectionsTable, cid));
-
-    // Remove the user from their party's member list
     const dAttrs = unmarshall(dResp.Attributes);
-    if (dAttrs.pid !== undefined) {
-      const uResp = await updateItem("delete members :m", { ":m": marshall(new Set([cid])) }, partiesTable, pid);
+    const pid = dAttrs.pid;
 
-      // If the party is empty, we can delete it
+    if (pid !== undefined) {
+      // Remove the user from their party's member list
+      const uResp = await updateItem("delete members :m", { ":m": marshall(new Set([cid])) }, partiesTable, pid);
       const uAttrs = unmarshall(uResp.Attributes);
       const partyMembers = uAttrs?.members ?? [];
-      if (partyMembers.length == 0) {
-        await deleteItem(partiesTable, pid);
-      }
+
+      // If the party is empty, we can delete it
+      if (partyMembers.length == 0) await deleteItem(partiesTable, pid);
     }
   }
 
