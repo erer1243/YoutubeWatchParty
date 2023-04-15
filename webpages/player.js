@@ -26,90 +26,91 @@ function loadVideo() {
   }
 }
 //
-    let ws;
+var ws;
 
-    function connectWebSocket(murl) {
-      ws = new WebSocket(murl);
+function connectWebSocket(murl) {
+  ws = new WebSocket(murl);
 
-      ws.onopen = () => {
-        console.log('WebSocket connection opened');
-      };
+  ws.onopen = () => {
+	console.log('WebSocket connection opened');
+  };
 
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        handleMessage(msg);
-      };
+  ws.onmessage = (event) => {
+	const msg = JSON.parse(event.data);
+	handleMessage(msg);
+  };
 
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-      };
+  ws.onclose = () => {
+	console.log('WebSocket connection closed');
+  };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-    }
+  ws.onerror = (error) => {
+	console.error('WebSocket error:', error);
+  };
+}
 
-    function handleMessage(msg) {
-      console.log('Received message:', msg);
+function handleMessage(msg) {
+  console.log('Received message:', msg);
 
-      // Handle different actions from the server
-      switch (msg.action) {
-        case 'info':
-          // Update video, pause/play status, and seek time based on received info
-          break;
-        case 'paused':
-          // Update pause/play status based on received status
-          break;
-        case 'seek':
-          // Update seek time based on received seek time
-          break;
-        case 'video':
-          // Update video based on received video ID
-          break;
-        default:
-          console.warn('Unknown action received:', msg.action);
-      }
-    }
+  // Handle different actions from the server
+  switch (msg.action) {
+	case 'info':
+	  // Update video, pause/play status, and seek time based on received info
+	  break;
+	case 'paused':
+	  // Update pause/play status based on received status
+	  break;
+	case 'seek':
+	  // Update seek time based on received seek time
+	  break;
+	case 'video':
+	  // Update video based on received video ID
+	  break;
+	default:
+	  console.warn('Unknown action received:', msg.action);
+  }
+}
 
-    function joinParty(partyId) {
-      const msg = {
-        action: 'join',
-        pid: partyId,
-      };
-      sendWebSocketMessage(msg);
-    }
+function joinParty(partyId) {
+  const msg = {
+	action: 'join',
+	pid: partyId,
+  };
+  sendWebSocketMessage(msg);
+}
 
-    function togglePaused(paused) {
-      const msg = {
-        action: 'paused',
-        paused: paused,
-      };
-      sendWebSocketMessage(msg);
-    }
+function togglePaused(paused) {
+  const msg = {
+	action: 'paused',
+	paused: paused,
+  };
+  sendWebSocketMessage(msg);
+}
 
-    function updateSeek(seek) {
-      const msg = {
-        action: 'seek',
-        seek: seek,
-      };
-      sendWebSocketMessage(msg);
-    }
+function updateSeek(seek) {
+  const msg = {
+	action: 'seek',
+	seek: seek,
+  };
+  sendWebSocketMessage(msg);
+}
 
-    function updateVideo(videoId) {
-      const msg = {
-        action: 'video',
-        vid: videoId,
-      };
-      sendWebSocketMessage(msg);
-    }
+function updateVideo(videoId) {
+  const msg = {
+	action: 'video',
+	vid: videoId,
+  };
+  sendWebSocketMessage(msg);
+}
 
-    function sendWebSocketMessage(msg) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(msg));
-      } else {
-        console.error('WebSocket is not open:', ws.readyState);
-      }
-    }
+function sendWebSocketMessage(msg) {
+  if (ws.readyState === WebSocket.OPEN) {
+	ws.send(JSON.stringify(msg));
+  } else {
+	console.error('WebSocket is not open:', ws.readyState);
+  }
+}
+
 async function fetchFunc() {
   try {
     r = await fetch("/api-url");
@@ -185,7 +186,6 @@ function printResponse(response) {
   console.log("Server response:", response);
 }
  */
-
 function addToQueue() {
   const videoUrl = document.getElementById("videoUrl").value;
   const videoId = parseVideoId(videoUrl);
@@ -223,14 +223,12 @@ function updateQueue(videoId) {
   videoQueue.appendChild(listItem);
 }
 
-
 function ret() {
 	
 	let i = 1;
 	i = i + i;
 	return i;
 }
-
 
 function makeGroup() {
 	sendMessage('create');
