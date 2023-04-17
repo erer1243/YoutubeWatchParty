@@ -153,11 +153,11 @@
 
         submitCodeBtn.addEventListener('click', () => {
             const groupCode = groupCodeInput.value;
-            if (groupCode.length === 4) {
+            if (groupCode.length > 0 && groupCode.length < 20) {
                 sessionStorage.setItem('groupCode', groupCode);
                 window.location.href = 'player.html';
             } else {
-                alert('Please enter a valid 4-digit code');
+                alert('Please enter a valid code');
             }
         });
 
