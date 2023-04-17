@@ -13,35 +13,23 @@
     <label for="videoUrl">Enter YouTube URL:</label>
     <input type="text" id="videoUrl">
     <button id="loadVideo">Load Video</button>
-    <button id="addToQueue">Add to Queue</button>
   </div>
     <h4 id = "GCODE"></h4>
 	<script src="player.js"></script>
   	<script>
 		groupCode = sessionStorage.getItem("groupCode");
-
 		console.log("Joined " + groupCode);
-		
 		const text = "Group code: " + groupCode;
 		const gcHead = document.getElementById("GCODE");
 		gcHead.innerHTML = text;
-
-				
 	</script>
-
-
   <div class="main-content">
-
-    <div class="video-queue" id="videoQueue">
-	
-      <h2>Video Queue</h2>
-    </div>
     <iframe id="existing-iframe-example"
         width="640" height="360"
         src="https://www.youtube.com/embed/M7lc1UVf-VE?enablejsapi=1&origin=http://youtubewatchparty.s3-website-us-east-1.amazonaws.com"
         frameborder="0"
-        style="border: solid 4px #37474F"
-></iframe>
+        style="border: solid 4px #37474F">
+    </iframe>
   </div>
 	Click the player or adjust volume, etc to begin playing videos.
 </body>

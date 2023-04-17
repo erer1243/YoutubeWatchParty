@@ -208,12 +208,12 @@ const actionHandlers = {
 const sendOtherPartyMembers = async (cid, pid, msg) => {
   const members = (await db.getPartyInfo(pid)).members;
   const others = members.filter(m => m !== cid);
-  for (const ocid of others) {
+  for (const otherCid of others) {
     try {
-      await send(ocid, msg);
+      await send(otherCid, msg);
     } catch (e) {
       // ignore the error so that clients still receive this message
-      console.error(`\n${ocid}: ${e}`);
+      console.error(`\n${otherCid}: ${e}`);
     }
   }
 } 
