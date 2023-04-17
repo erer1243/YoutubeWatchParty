@@ -98,6 +98,9 @@ class VideoState {
   updateSeek(seek, ts) {
     this.updateField("seek", seek, ts)
     player.seekTo(seek, true);
+
+    // Sometimes the yt api unpauses when seeking
+    videoState.updatePaused(this.paused);
   }
 
   updateVideo(video, ts) {
