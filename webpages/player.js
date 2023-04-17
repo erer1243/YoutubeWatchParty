@@ -11,11 +11,13 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 //    after the API code downloads.
 var player;
 function onYouTubeIframeAPIReady() {
-	player = new YT.Player('player', {
-		height: '390',
-		width: '640',
-		videoId: 'M7lc1UVf-VE',
+	player = new YT.Player('existing-iframe-example', {
+		//height: '390',
+		//width: '640',
+		//videoId: 'M7lc1UVf-VE',
 		playerVars: {
+			//'autoplay': 1, // cant tell if i want this line or not
+			'controls': 1,
 			'playsinline': 1
 		},
 		events: {
@@ -35,10 +37,12 @@ function onYouTubeIframeAPIReady() {
 
 // 4. The API will call this function when the video player is ready.
 function onPlayerReady(event) {
+	document.getElementById('existing-iframe-example').style.borderColor = '#FF6D00';
 	//event.target.playVideo();
 }
 function onPlayerStateChange(event) {
 	console.log(event.data);
+	changeBorderColor(event.data);
 	switch (event.data) {
 		
 		case YT.PlayerState.ENDED:
@@ -55,11 +59,31 @@ function onPlayerStateChange(event) {
 		
 			break;
 		case YT.PlayerState.CUED:
-		
+			sendInfo();
 			break;
 		default:
 			console.warn("Error 7");
 	}
+}
+
+function changeBorderColor(playerStatus) {
+    var color;
+    if (playerStatus == -1) {
+      color = "#37474F"; // unstarted = gray
+    } else if (playerStatus == 0) {
+      color = "#FFFF00"; // ended = yellow
+    } else if (playerStatus == 1) {
+      color = "#33691E"; // playing = green
+    } else if (playerStatus == 2) {
+      color = "#DD2C00"; // paused = red
+    } else if (playerStatus == 3) {
+      color = "#AA00FF"; // buffering = purple
+    } else if (playerStatus == 5) {
+      color = "#FF6D00"; // video cued = orange
+    }
+    if (color) {
+      document.getElementById('existing-iframe-example').style.borderColor = color;
+    }
 }
 // 5. The API calls this function when the player's state changes.
 //    The function indicates that when playing a video (state=1),
@@ -121,6 +145,7 @@ function onPlayerStateChange(event) {
 
 // This function simulates updating the queue on the server and all clients
 // Replace this with the actual WebSocket API call and event handling
+
 function updateQueue(videoId) {
   const videoQueue = document.getElementById("videoQueue");
   const listItem = document.createElement("li");
@@ -212,6 +237,12 @@ function updateVideo(videoId) {
 	vid: videoId,
   };
   sendWebSocketMessage(msg);
+}
+function sendInfo() {
+	const msg = {
+		action: 'info'
+	};
+	sendWebSocketMessage(msg);
 }
 
 function sendWebSocketMessage(msg) {
