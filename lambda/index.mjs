@@ -122,7 +122,7 @@ let db = { /* populated in proceeding block */ };
 
   db.setVideo = (pid, vid) => updateItem(
     "set video = :v, seek = :s, seekLastUpdated = :t",
-    { ":v": marshall(vid), ":s": marhsall(0), ":t": marshall(now()) },
+    { ":v": marshall(vid), ":s": marshall(0), ":t": marshall(now()) },
     partiesTable,
     pid
   )
