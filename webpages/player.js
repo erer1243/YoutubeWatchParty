@@ -1,84 +1,26 @@
-//player.js
-groupCode = sessionStorage.getItem("groupCode");
-// 2. This code loads the IFrame Player API code asynchronously.
-var tag = document.createElement('script');
+// Get the party
+const partyCode = sessionStorage.getItem("groupCode");
+const pHead = document.getElementById("party-code");
+const text = "party code: " + partyCode;
+pHead.innerHTML = text;
 
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-// 3. This function creates an <iframe> (and YouTube player)
-//    after the API code downloads.
-var player;
+let player;
+let setPlayerReady;
+const playerReady = new Promise(resolve => setPlayerReady = resolve);
 function onYouTubeIframeAPIReady() {
-  player = new YT.Player('existing-iframe-example', {
-    //height: '390',
-    //width: '640',
-    //videoId: 'M7lc1UVf-VE',
+  player = new YT.Player('player', {
+    height: '390',
+    width: '640',
     playerVars: {
-      //'autoplay': 1, // cant tell if i want this line or not
-      'controls': 1,
+      'autoplay': 0,
+      'controls': 0,
       'playsinline': 1
     },
     events: {
-      'onReady': onPlayerReady,
-      'onStateChange': onPlayerStateChange
+      onReady: setPlayerReady
     }
   });
 }
-
-// 4. The API will call this function when the video player is ready.
-function onPlayerReady(event) {
-  document.getElementById('existing-iframe-example').style.borderColor = '#FF6D00';
-  //event.target.playVideo();
-}
-function onPlayerStateChange(event) {
-  console.log(event.data);
-  changeBorderColor(event.data);
-  switch (event.data) {
-
-    case YT.PlayerState.ENDED:
-
-      break;
-    case YT.PlayerState.PLAYING:
-      togglePaused(false);
-      break;
-    case YT.PlayerState.PAUSED:
-      togglePaused(true);
-
-      break;
-    case YT.PlayerState.BUFFERING:
-
-      break;
-    case YT.PlayerState.CUED:
-      sendInfo();
-      break;
-    default:
-      console.warn("Error 7");
-  }
-}
-
-function changeBorderColor(playerStatus) {
-  var color;
-  if (playerStatus == -1) {
-    color = "#37474F"; // unstarted = gray
-  } else if (playerStatus == 0) {
-    color = "#FFFF00"; // ended = yellow
-  } else if (playerStatus == 1) {
-    color = "#33691E"; // playing = green
-  } else if (playerStatus == 2) {
-    color = "#DD2C00"; // paused = red
-  } else if (playerStatus == 3) {
-    color = "#AA00FF"; // buffering = purple
-  } else if (playerStatus == 5) {
-    color = "#FF6D00"; // video cued = orange
-  }
-  if (color) {
-    document.getElementById('existing-iframe-example').style.borderColor = color;
-  }
-}
-
-document.getElementById("loadVideo").addEventListener("click", loadVideo);
 
 function loadVideo() {
   const videoUrl = document.getElementById("videoUrl").value;
@@ -91,6 +33,7 @@ function loadVideo() {
     alert("Invalid YouTube URL");
   }
 }
+document.getElementById("loadVideo").addEventListener("click", loadVideo);
 
 function parseVideoId(url) {
   const regex = /(?:\?v=|&v=|youtu\.be\/)([a-zA-Z0-9_-]+)/;
@@ -98,14 +41,13 @@ function parseVideoId(url) {
   return match ? match[1] : null;
 }
 
-var ws;
-
+let ws;
 function connectWebSocket(murl) {
   ws = new WebSocket(murl);
 
   ws.onopen = () => {
     console.log('WebSocket connection opened');
-    joinParty(groupCode);
+    sendJoin(partyCode);
   };
 
   ws.onmessage = (event) => {
@@ -113,45 +55,101 @@ function connectWebSocket(murl) {
     handleMessage(msg);
   };
 
-  ws.onclose = () => {
-    console.log('WebSocket connection closed');
-  };
-
   ws.onerror = (error) => {
     console.error('WebSocket error:', error);
   };
 }
 
-function handleMessage(msg) {
+async function fetchWsUrl() {
+  return "wss://7l8uxw0v14.execute-api.us-east-1.amazonaws.com/main";
+
+  const r = await fetch("/api-url");
+  apiurl = await r.text();
+  return apiurl;
+}
+
+async function initWebSocket() {
+  const wsUrl = await fetchWsUrl();
+  connectWebSocket(wsUrl);
+}
+initWebSocket();
+
+class VideoState {
+  constructor() {
+    this.paused = true;
+    this.seek = 0;
+    this.video = "";
+    this.pausedTimestamp = 0;
+    this.seekTimestamp = 0;
+    this.videoTimestamp = 0;
+  }
+
+  // Updates the field, returns true if it was changed (and so needs player update), false otherwise
+  updateField(name, value, ts) {
+    const tsField = name + "Timestamp";
+    if (this[tsField] < ts && this[name] !== value) {
+      this[name] = value;
+      this[tsField] = ts;
+      return true;
+    }
+    return false;
+  }
+
+  updatePaused(paused, ts) {
+    if (this.updateField("paused", paused, ts)) {
+      if (this.paused) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+    }
+  }
+
+  updateSeek(seek, ts) {
+    if (this.updateField("seek", seek, ts)) {
+      player.seekTo(seek, true);
+    }
+  }
+
+  updateVideo(video, ts) {
+    if (this.updateField("video", video, ts)) {
+      player.loadVideoById(video);
+    }
+  }
+}
+const videoState = new VideoState();
+
+async function handleMessage(msg) {
   console.log('Received message:', msg);
+
+  await playerReady;
+
+  const { paused, seek, video, timestamp: ts } = msg;
 
   // Handle different actions from the server
   switch (msg.action) {
     case 'info':
-      // Update video, pause/play status, and seek time based on received info
+      videoState.updateVideo(video, ts);
+      videoState.updateSeek(seek, ts);
+      videoState.updatePaused(paused, ts);
       break;
     case 'paused':
-      if (msg.paused == true) {
-        player.pauseVideo();
-      } else if (msg.paused == false) {
-        player.playVideo();
-      }
-      // Update pause/play status based on received status
+      videoState.updatePaused(paused, ts);
       break;
     case 'seek':
-      // Update seek time based on received seek time
+      videoState.updateSeek(seek, ts);
       break;
     case 'video':
       // Update video based on received video ID
       player.loadVideoById(msg.vid);
+      videoState.updateVideo(video, ts);
       break;
     default:
-      console.warn('Unknown action received:', msg.action);
-      console.warn('The msg received:', msg);
+      console.warn('Bad message received:', JSON.stringify(msg, null, 2));
   }
 }
 
-function joinParty(partyId) {
+function sendJoin(partyId) {
   const msg = {
     action: 'join',
     pid: partyId,
@@ -159,7 +157,7 @@ function joinParty(partyId) {
   sendWebSocketMessage(msg);
 }
 
-function togglePaused(paused) {
+function sendPaused(paused) {
   const msg = {
     action: 'paused',
     paused: paused,
@@ -167,7 +165,7 @@ function togglePaused(paused) {
   sendWebSocketMessage(msg);
 }
 
-function updateSeek(seek) {
+function sendSeek(seek) {
   const msg = {
     action: 'seek',
     seek: seek,
@@ -175,7 +173,7 @@ function updateSeek(seek) {
   sendWebSocketMessage(msg);
 }
 
-function updateVideo(videoId) {
+function sendVideo(videoId) {
   const msg = {
     action: 'video',
     vid: videoId,
@@ -196,16 +194,3 @@ function sendWebSocketMessage(msg) {
     console.error('WebSocket is not open:', ws.readyState);
   }
 }
-
-async function fetchWsUrl() {
-  const r = await fetch("/api-url");
-  apiurl = await r.text();
-  return apiurl;
-}
-
-async function initWebSocket() {
-  const wsUrl = await fetchWsUrl();
-  connectWebSocket(wsUrl);
-}
-
-initWebSocket();

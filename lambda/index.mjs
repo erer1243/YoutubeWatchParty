@@ -67,13 +67,16 @@ let db = { /* populated in proceeding block */ };
     const members = Array.from(item.members ?? []);
     const paused = item.paused ?? true;
     const video = item.video ?? "jNQXAC9IVRw";
-    const seekLastUpdated = item.seekLastUpdated ?? 0;
+    const seekLastUpdated = item.seekLastUpdated ?? now();
     let seek = item.seek ?? 0;
 
     if (!paused && seekLastUpdated) {
       const seekOffset = Math.floor((seekLastUpdated - now()) / 1000);
       seek += seekOffset;
     }
+
+    if (item.seekLastUpdated === undefined)
+      await db.setSeek(pid, 0);
 
     return { members, paused, video, seek };
   }

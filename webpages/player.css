@@ -10,42 +10,19 @@
   }
 }
 
-@keyframes titlegradient {
-  0%   {color:red; left:0px; top:0px;}
-  25%  {color:yellow; left:0px; top:0px;}
-  50%  {color:blue; left:0px; top:0px;}
-  75%  {color:green; left:0px; top:0px;}
-  100% {color:red; left:0px; top:0px;}
-}
 body {
   font-family: Arial, sans-serif;
   text-align: center;
-  background: linear-gradient(270deg, #ff0a54, #cbe7ed, #ff0a54);
+  background: linear-gradient(to left, #a10003, #330102);
   background-size: 600% 600%;
-  animation: gradient 3s ease 1;
+  animation: gradient 5s ease 1;
   padding: 10px;
+  height: 100%;
 }
 
-h1 {
-  /* background: linear-gradient(270deg, #aa0ae4, #2be7ed, #3f0a54); */
-/*   width: 100px;
-  height: 100px;
-  color: red;*/
-  position: relative;
-  /*animation-name: titlegradient;*/
-  animation-duration: 5s;
-  animation-timing-function: linear;
-  animation-delay: 2s;
-  /*animation-iteration-count: 1;*/
-  animation-direction: alternate;
- /* width: -moz-fit-content;
-  width: fit-content;
-  text-align:center;
-  // workaround for IE11
-  display: table;*/
-  color: linear-gradient(270deg, #ff0a54, #cbe7ed, #ff0a54);;
-  /*animation: gradient 1s ease infinite;*/
-}
+iframe { pointer-events: none; }
+
+.text { color: seashell; }
 
 .url-input {
   margin-bottom: 20px;
@@ -62,17 +39,13 @@ h1 {
 }
 
 .main-content {
-  display: flex;
+  display: inline-block;
   justify-content: center;
   align-items: flex-start;
 }
 
 .welc {
 	margin-top:0px;
-}
-
-.GCODE {
-
 }
 
 .relative {
@@ -82,26 +55,40 @@ h1 {
   border: 30px solid #73AD21;
 } 
 
-.video-queue {
-  flex: 1;
-  max-width: 300px;
-  padding: 10px;
-  border: 1px solid white;
-  border-radius: 5px;
+.video-controls {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 5px;
+}
+
+.play-pause-btn,
+.controls-wrapper,
+.time-info {
   margin-right: 10px;
-  color: white;
-  overflow-y: auto;
 }
 
-.video-queue h2 {
-  margin-top: 0;
+.time-info > * {
+  display: inline-block;
 }
 
-.video-queue ul {
-  list-style-type: none;
-  padding: 0;
+.controls-wrapper {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
 }
 
-.video-queue li {
-  margin-bottom: 5px;
+.volume-control,
+.seek-bar {
+  flex-shrink: 0;
+}
+
+.seek-bar {
+  width: 85%;
+}
+
+.volume-control {
+  width: 15%;
 }

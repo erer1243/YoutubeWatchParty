@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Watch Party!</title>
-	<link rel="icon" href="https://www.youtube.com/s/desktop/80237066/img/favicon_32x32.png" sizes="32x32">
+  <link rel="icon" href="https://www.youtube.com/s/desktop/80237066/img/favicon_32x32.png" sizes="32x32">
   <link rel="stylesheet" href="player.css">
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
+
 <body>
-  <h1  class="welc" >YouTube Watch Party</h1>
+  <h1 class="welc text">YouTube Watch Party</h1>
   <div class="url-input">
-    <label for="videoUrl">Enter YouTube URL:</label>
+    <label for="videoUrl" class="text">Enter YouTube URL:</label>
     <input type="text" id="videoUrl">
     <button id="loadVideo">Load Video</button>
   </div>
-    <h4 id = "GCODE"></h4>
-	<script src="player.js"></script>
-  	<script>
-		groupCode = sessionStorage.getItem("groupCode");
-		console.log("Joined " + groupCode);
-		const text = "Group code: " + groupCode;
-		const gcHead = document.getElementById("GCODE");
-		gcHead.innerHTML = text;
-	</script>
+  <h4 id="party-code" class="text"></h4>
   <div class="main-content">
-    <iframe id="existing-iframe-example"
-        width="640" height="360"
-        src="https://www.youtube.com/embed/M7lc1UVf-VE?enablejsapi=1&origin=http://youtubewatchparty.s3-website-us-east-1.amazonaws.com"
-        frameborder="0"
-        style="border: solid 4px #37474F">
-    </iframe>
+    <div id="player"></div>
+    <div class="video-controls">
+      <button id="pause-play-btn" class="play-pause-btn">Play</button>
+      <div class="controls-wrapper">
+        <input id="volume-control" class="volume-control" type="range" min="0" max="100" step="1" value="100">
+        <input id="seek-bar" class="seek-bar" type="range" min="0" max="100" step="1" value="0">
+      </div>
+      <div class="time-info">
+        <span id="current-time" class="current-time text">00:00</span>
+        <p class="text">/</p>
+        <span id="total-time" class="total-time text">00:00</span>
+      </div>
+    </div>
   </div>
-	Click the player or adjust volume, etc to begin playing videos.
+  <p class="text">Click the player or adjust volume, etc to begin playing videos.</p>
+  <script src="player.js"></script>
 </body>
+
 </html>

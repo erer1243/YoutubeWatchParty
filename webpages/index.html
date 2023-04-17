@@ -1,37 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Party</title>
-	<link rel="icon" href="https://www.youtube.com/s/desktop/80237066/img/favicon_32x32.png" sizes="32x32">
-	    <style>
-			body {
-				margin: 0;
-				overflow: hidden;
-				background-color: #000;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				height: 100vh;
-				color: #FFF;
-				font-family: Arial, sans-serif;
-				font-size: 3em;
-			}
-    
-    <!--     body {
+    <link rel="icon" href="https://www.youtube.com/s/desktop/80237066/img/favicon_32x32.png" sizes="32x32">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #FFF;
+            font-family: Arial, sans-serif;
+            font-size: 3em;
+        }
+
+        body {
             font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
-        } -->
+        }
+
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+
         .button {
             background-color: #FF0000;
             border: none;
@@ -45,40 +48,47 @@
             padding: 10px 20px;
             border-radius: 8px;
         }
+
         .input-container {
             display: none;
         }
+
         .input-group {
             display: flex;
             align-items: center;
         }
+
         .input-label {
             margin-right: 10px;
         }
+
     </style>
 </head>
+
 <body>
-	<style>
-			body {
-				margin: 0;
-				overflow: hidden;
-				background-color: #000;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				height: 100vh;
-				color: #FFF;
-				font-family: Arial, sans-serif;
-				font-size: 2em;
-			}
-			.fix{
-				position:fixed;
-				bottom:50px;
-				left:42%;
-			}
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #FFF;
+            font-family: Arial, sans-serif;
+            font-size: 2em;
+        }
+
+        .fix {
+            position: fixed;
+            bottom: 50px;
+            left: 42%;
+        }
+
     </style>
     <div class="container">
-        <h1>Welcome to YouTube Watch Party</h1>
+        <h1 style="text-align: center;">Welcome to YouTube Watch Party</h1>
         <button class="button" id="startGroupBtn">Start a Group</button>
         <button class="button" id="joinGroupBtn">Join a Group</button>
         <div class="input-container" id="inputContainer">
@@ -89,7 +99,7 @@
             <button class="button" id="submitCodeBtn">Submit Code</button>
         </div>
     </div>
-	    <script>
+    <script>
         const createFirework = () => {
             const firework = document.createElement("div");
             firework.style.position = "absolute";
@@ -116,11 +126,13 @@
                 transform: translateY(0) scale(0);
                 opacity: 1;
             }
+
             100% {
                 transform: translateY(-50px) scale(1.5);
                 opacity: 0;
             }
         }
+
     </style>
     <script>
         const startGroupBtn = document.getElementById('startGroupBtn');
@@ -132,7 +144,7 @@
         startGroupBtn.addEventListener('click', () => {
             const groupCode = generateGroupCode();
             sessionStorage.setItem('groupCode', groupCode);
-            window.location.href =  'player.html';
+            window.location.href = 'player.html';
         });
 
         joinGroupBtn.addEventListener('click', () => {
@@ -143,7 +155,7 @@
             const groupCode = groupCodeInput.value;
             if (groupCode.length === 4) {
                 sessionStorage.setItem('groupCode', groupCode);
-				window.location.href = 'player.html';
+                window.location.href = 'player.html';
             } else {
                 alert('Please enter a valid 4-digit code');
             }
@@ -153,7 +165,7 @@
             return Math.floor(1000 + Math.random() * 9000).toString();
         }
     </script>
-	<img src="https://d0.awsstatic.com/logos/powered-by-aws.png" alt="Powered by AWS Cloud Computing" class="fix">
+    <!-- <img src="https://d0.awsstatic.com/logos/powered-by-aws.png" alt="Powered by AWS Cloud Computing" class="fix"> -->
 </body>
 
 </html>
