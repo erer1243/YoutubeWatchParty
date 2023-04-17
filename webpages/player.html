@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Watch Party!</title>
+	<link rel="icon" href="https://www.youtube.com/s/desktop/80237066/img/favicon_32x32.png" sizes="32x32">
   <link rel="stylesheet" href="player.css">
 </head>
 <body>
@@ -17,34 +18,6 @@
     <h4 id = "GCODE"></h4>
 	<script src="player.js"></script>
   	<script>
-		//const queryString = window.location.search;
-		//var number = 0;
-		// Use a regular expression to match the 4 digit number after a ?
-		//const regex = /\?(\d{4})/;
-		//const match = regex.exec(queryString);
-
-		// Extract the 4 digit number from the match
-		//try {
-		//	number = match[1];
-		//} catch (e) {
-		//	number = 0;
-		//}
-		/*
-		ret();
-		// Convert the number to an integer
-		var groupCode = parseInt(number, 10);
-		console.log("Before " + groupCode);
-		function handleGroupCode(groupCode) {
-			if (groupCode === 0) {
-				makeGroup();
-			} if (groupCode.length === 4) {
-				joinGroup(groupCode);
-			} else {
-				alert('Error: Invalid Group Code!');
-			}
-		}
-		*/
-		//ret();
 		groupCode = sessionStorage.getItem("groupCode");
 
 		console.log("Joined " + groupCode);
@@ -65,11 +38,10 @@
     </div>
     <div id="player"></div>
   </div>
-  <script src="https://www.youtube.com/iframe_api"></script>
-  <button class="button" id="JG">jOIN</button>
+	<button class="button" id="uVid">CHANGE VIDEO</button>
 	<script>        
-		JG.addEventListener('click', () => {
-            joinParty(groupCode);
+		uVid.addEventListener('click', () => {
+            updateVideo("cy8r7WSuT1I");
         });
 	</script>
 </body>
