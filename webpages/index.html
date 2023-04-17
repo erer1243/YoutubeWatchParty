@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Party</title>
+	<link rel="icon" href="https://www.youtube.com/s/desktop/80237066/img/favicon_32x32.png" sizes="32x32">
 	    <style>
 			body {
 				margin: 0;
@@ -131,7 +132,7 @@
         startGroupBtn.addEventListener('click', () => {
             const groupCode = generateGroupCode();
             sessionStorage.setItem('groupCode', groupCode);
-            window.location.href =  'player.html?' + groupCode;
+            window.location.href =  'player.html';
         });
 
         joinGroupBtn.addEventListener('click', () => {
@@ -142,7 +143,7 @@
             const groupCode = groupCodeInput.value;
             if (groupCode.length === 4) {
                 sessionStorage.setItem('groupCode', groupCode);
-				window.location.href = 'player.html?' + groupCode;
+				window.location.href = 'player.html';
             } else {
                 alert('Please enter a valid 4-digit code');
             }
