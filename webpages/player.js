@@ -98,6 +98,7 @@ class VideoState {
   updateSeek(seek, ts) {
     this.updateField("seek", seek, ts)
     player.seekTo(seek, true);
+    setCurrentTimeFromPlayer(seek);
 
     // Sometimes the yt api unpauses when seeking
     videoState.updatePaused(this.paused);
@@ -214,9 +215,10 @@ const parseVideoId = url => {
 }
 
 ael("click", "load-video", () => {
-  const videoUrl = document.getElementById("video-url").value;
-  const videoId = parseVideoId(videoUrl);
+  const videoUrl = document.getElementById("video-url");
+  const videoId = parseVideoId(videoUrl.value);
   if (videoId) {
+    videoUrl.value = "";
     sendVideo(videoId);
     videoState.updateVideo(videoId);
   } else {
