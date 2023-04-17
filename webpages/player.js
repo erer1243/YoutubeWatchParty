@@ -54,8 +54,6 @@ function connectWebSocket(murl) {
 }
 
 async function fetchWsUrl() {
-  return "wss://7l8uxw0v14.execute-api.us-east-1.amazonaws.com/main";
-
   const r = await fetch("/api-url");
   apiurl = await r.text();
   return apiurl;
