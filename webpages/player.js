@@ -136,8 +136,9 @@ async function handleMessage(msg) {
   await playerReady;
 
   // Handle different actions from the server
-  const { paused, seek, video, timestamp: ts } = msg;
-  switch (msg.action) {
+  const { paused, seek, video, action, timestamp: ts } = msg;
+
+  switch (action) {
     case 'info':
       videoState.updateVideo(video, ts);
       await videoState.newVideoReady;
@@ -226,7 +227,7 @@ ael("click", "load-video", () => {
   }
 })
 
-ael("click", "pause-play-btn", ev => {
+ael("click", "pause-play-btn", () => {
   const paused = !videoState.paused;
   videoState.updatePaused(paused);
   sendPaused(paused);
