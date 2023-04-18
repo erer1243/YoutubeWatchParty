@@ -71,7 +71,7 @@ let db = { /* populated in proceeding block */ };
     let seek = item.seek ?? 0;
 
     if (!paused && seekLastUpdated) {
-      const seekOffset = Math.floor((seekLastUpdated - now()) / 1000);
+      const seekOffset = Math.floor((now() - seekLastUpdated) / 1000);
       seek += seekOffset;
     }
 
@@ -109,23 +109,26 @@ let db = { /* populated in proceeding block */ };
     }
   }
 
-  db.setPaused = (pid, paused) => updateItem(
-    "set paused = :p, seekLastUpdated = :t",
-    { ":p": marshall(paused), ":t": marshall(now()) },
-    partiesTable,
-    pid,
-  );
+  db.setPaused = async (pid, paused) => {
+    const { seek } = await db.getPartyInfo(pid);
+    await updateItem(
+      "set paused = :p, seek = :s, seekLastUpdated = :t",
+      marshall({ ":p": paused, ":s": seek, ":t": now() }),
+      partiesTable,
+      pid,
+    );
+  }
 
   db.setSeek = (pid, seek) => updateItem(
     "set seek = :s, seekLastUpdated = :t",
-    { ":s": marshall(seek), ":t": marshall(now()) },
+    marshall({ ":s": seek, ":t": now() }),
     partiesTable,
     pid
   );
 
   db.setVideo = (pid, vid) => updateItem(
     "set video = :v, seek = :s, seekLastUpdated = :t",
-    { ":v": marshall(vid), ":s": marshall(0), ":t": marshall(now()) },
+    marshall({ ":v": vid, ":s": 0, ":t": now() }),
     partiesTable,
     pid
   )

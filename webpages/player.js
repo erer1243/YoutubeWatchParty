@@ -87,12 +87,9 @@ class VideoState {
 
   updatePaused(paused, ts) {
     this.updateField("paused", paused, ts);
-    if (this.paused) {
-      player.pauseVideo();
-    } else {
-      player.playVideo();
-    }
     setPauseButton(this.paused);
+    if (this.paused) player.pauseVideo();
+    else player.playVideo();
   }
 
   updateSeek(seek, ts) {
@@ -116,7 +113,7 @@ class VideoState {
       // dur is a marker of metadata being loaded
       const dur = player.getDuration();
       if (dur) setReady();
-      else setTimeout(checkReady, 150);
+      else setTimeout(checkReady, 300);
     }
     checkReady();
 
