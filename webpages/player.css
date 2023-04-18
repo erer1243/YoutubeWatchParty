@@ -70,6 +70,10 @@ iframe { pointer-events: none; }
   margin-right: 10px;
 }
 
+.play-pause-btn {
+  width: 60px;
+}
+
 .time-info > * {
   display: inline-block;
 }
@@ -91,4 +95,8 @@ iframe { pointer-events: none; }
 
 .volume-control {
   width: 15%;
+}
+
+#sync {
+  width: 50px;
 }

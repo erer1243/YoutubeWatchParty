@@ -71,7 +71,7 @@ let db = { /* populated in proceeding block */ };
     let seek = item.seek ?? 0;
 
     if (!paused && seekLastUpdated) {
-      const seekOffset = Math.floor((now() - seekLastUpdated) / 1000);
+      const seekOffset = Math.round((now() - seekLastUpdated) / 1000);
       seek += seekOffset;
     }
 

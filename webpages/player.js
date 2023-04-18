@@ -236,6 +236,8 @@ ael("input", "volume-control", ev => {
   player.setVolume(Math.max(Math.min(vol, 100), 0));
 });
 
+ael("click", "sync", sendInfo);
+
 const getSeekBarTime = () => {
   const dur = player.getDuration();
   const bar = document.getElementById("seek-bar");
