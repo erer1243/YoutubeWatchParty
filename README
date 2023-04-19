@@ -24,6 +24,7 @@ Project structure:
 * SCHEMA      - Describes the format of websocket messages between the client & server
 * SCALING     - Describes scaling behavior
 * diagram.png - Diagram of AWS services used
+* logs.png    - Screenshot of CloudWatch logs
 * index.mjs   - CDK script
 * names.json  - Service IDs, used in index.mjs and scripts
 * webpages/   - Frontend html & js
