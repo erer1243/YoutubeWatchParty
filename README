@@ -1,0 +1,31 @@
+YoutubeWatchParty - Team 9
+
+Watch Youtube videos together. 
+Parties (aka groups) are public and only require their ID to join.
+Between devices, video playback is synchronized in real time.
+When someone changes the video, pauses/unpauses the video, or seeks to
+a different time, the action is forwarded to every client in the party.
+
+The project can be launched with `cdk deploy`. All dependency installation
+and packing will be done automatically. Once launched, the site URL is:
+  http://youtubewatchparty.s3-website-us-east-1.amazonaws.com
+
+AWS Services used:
+* Code is hosted on AWS CodeCommit, repo "YoutubeWatchParty"
+* S3 is used to host & serve static webpages.
+* API Gateway is used to host a websocket endpoint, to facilitate real time,
+  bidirectional communication between client and server.
+* Lambda is used to handle websocket messages to and from clients, as well
+  as push & pull party information from the database.
+* DynamoDB is used to store party information. The database schema is
+  described at the top of lambda/index.mjs.
+
+Project structure:
+* SCHEMA      - Describes the format of websocket messages between the client & server
+* SCALING     - Describes scaling behavior
+* diagram.png - Diagram of AWS services used
+* index.mjs   - CDK script
+* names.json  - Service IDs, used in index.mjs and scripts
+* webpages/   - Frontend html & js
+* lambda/     - Lambda / event handler code
+* scripts/    - Miscellaneous shell scripts
