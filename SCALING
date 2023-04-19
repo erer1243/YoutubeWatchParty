@@ -1,9 +1,7 @@
 Scaling for this project is straightforward.
-* S3 access automatically scales to meet demand.
-* API Gateway automatically scales to meet demand.
-* Lambda automatically scales to meet demand until the AWS account's concurrency
-  limit is exceeded. Increasing our account's concurrency limit is outside the
-  scope of this project.
+* S3 access automatically scales to meet demand (barring account quotas).
+* API Gateway automatically scales to meet demand (barring account quotas).
+* Lambda automatically scales to meet demand (barring account quotas).
 * DynamoDB as it is configured currently does not scale. To take advantage of
   AWS free tier, DynamoDB is configured as provisioned with 5 read and 5 write
   units. However, it would be a small change to switch DynamoDB to on-demand
