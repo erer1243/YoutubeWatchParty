@@ -6,6 +6,8 @@ import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { WebSocketApi, WebSocketStage } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { WebSocketLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { LambdaToDynamoDB } from "@aws-solutions-constructs/aws-lambda-dynamodb";
+import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
+import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { readFileSync } from 'fs';
 
 let {
@@ -19,6 +21,8 @@ let {
   BUCKET_DEPLOYMENT_NAME,
   BUCKET_ID,
   API_URL_OBJECT_KEY,
+  DISTRIBUTION_NAME,
+  ORIGIN_ACCESS_IDENTITY_NAME
 } = JSON.parse(readFileSync("names.json"));
 
 // The CloudFormation stack
@@ -83,10 +87,7 @@ eventHandlerLambda.addEnvironment("API_MGMT_URL", webSocketStage.callbackUrl);
 
 // S3 Bucket
 const bucket = new Bucket(stack, BUCKET_NAME, {
-  publicReadAccess: true,
   removalPolicy: RemovalPolicy.DESTROY,
-  websiteIndexDocument: "index.html",
-  websiteErrorDocument: undefined,
   autoDeleteObjects: true,
   bucketName: BUCKET_ID,
 });
@@ -97,3 +98,15 @@ new BucketDeployment(stack, BUCKET_DEPLOYMENT_NAME, {
   sources: [websiteSource, apiUrlSource],
   destinationBucket: bucket
 });
+
+// CloudFront Distribution
+const originAccessIdentity = new OriginAccessIdentity(stack, ORIGIN_ACCESS_IDENTITY_NAME);
+bucket.grantRead(originAccessIdentity);
+
+const distribution = new Distribution(stack, DISTRIBUTION_NAME, {
+  defaultBehavior: {
+    origin: new S3Origin(bucket, { originAccessIdentity })
+  }
+})
+
+void distribution;

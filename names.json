@@ -8,5 +8,7 @@
   "BUCKET_NAME": "YTWP-website-bucket",
   "BUCKET_DEPLOYMENT_NAME": "YTWP-bucket-deployment",
   "BUCKET_ID": "youtubewatchparty",
-  "API_URL_OBJECT_KEY": "api-url"
+  "API_URL_OBJECT_KEY": "api-url",
+  "DISTRIBUTION_NAME": "YTWP-distribution",
+  "ORIGIN_ACCESS_IDENTITY_NAME": "YTWP-origin-access-identity"
 }
