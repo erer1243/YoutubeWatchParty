@@ -104,6 +104,7 @@ const originAccessIdentity = new OriginAccessIdentity(stack, ORIGIN_ACCESS_IDENT
 bucket.grantRead(originAccessIdentity);
 
 const distribution = new Distribution(stack, DISTRIBUTION_NAME, {
+  defaultRootObject: "index.html",
   defaultBehavior: {
     origin: new S3Origin(bucket, { originAccessIdentity })
   }
